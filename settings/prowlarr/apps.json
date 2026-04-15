@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Radarr",
+    "implementation": "Radarr",
+    "syncLevel": "fullSync"
+  },
+  {
+    "name": "Sonarr",
+    "implementation": "Sonarr",
+    "syncLevel": "fullSync"
+  }
+]

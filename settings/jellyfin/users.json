@@ -1,0 +1,12 @@
+[
+  {
+    "Name": "rob",
+    "Policy": {
+      "IsAdministrator": true,
+      "EnableAllFolders": true,
+      "EnabledFolders": [],
+      "MaxStreamingBitrate": null,
+      "RemoteClientBitrateLimit": 0
+    }
+  }
+]

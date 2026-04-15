@@ -1,0 +1,17 @@
+{
+  "enabled_providers": [
+    "yifysubtitles",
+    "opensubtitlescom"
+  ],
+  "languages": {
+    "adaptive_searching": true,
+    "days_to_upgrade_subs": 7,
+    "default_und_audio_lang": "",
+    "default_und_embedded_subtitles_lang": "",
+    "embedded_subs_show_desired": true,
+    "hi_extension": "hi",
+    "language_equals": [],
+    "single_language": true,
+    "upgrade_subs": true
+  }
+}

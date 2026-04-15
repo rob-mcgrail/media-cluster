@@ -1,0 +1,29 @@
+[
+  {
+    "profileId": 1,
+    "name": "English",
+    "cutoff": null,
+    "items": [
+      {
+        "id": 1,
+        "language": "en",
+        "audio_exclude": "False",
+        "audio_only_include": "False",
+        "hi": "False",
+        "forced": "False"
+      },
+      {
+        "id": 2,
+        "language": "en",
+        "audio_exclude": "False",
+        "audio_only_include": "False",
+        "hi": "False",
+        "forced": "True"
+      }
+    ],
+    "mustContain": [],
+    "mustNotContain": [],
+    "originalFormat": 0,
+    "tag": null
+  }
+]

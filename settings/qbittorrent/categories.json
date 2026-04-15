@@ -1,0 +1,10 @@
+{
+  "movies": {
+    "name": "movies",
+    "savePath": "/data/torrents/movies"
+  },
+  "tv": {
+    "name": "tv",
+    "savePath": "/data/torrents/tv"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "HardwareAccelerationType": "qsv",
+  "EnableHardwareEncoding": true,
+  "EnableDecodingColorDepth10Hevc": true,
+  "EnableDecodingColorDepth10Vp9": true,
+  "VaapiDevice": "/dev/dri/renderD128"
+}

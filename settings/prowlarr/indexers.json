@@ -1,0 +1,250 @@
+[
+  {
+    "name": "1337x",
+    "definitionName": "1337x",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "definitionFile",
+        "value": "1337x"
+      },
+      {
+        "name": "baseUrl",
+        "value": null
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      },
+      {
+        "name": "uploader",
+        "value": ""
+      },
+      {
+        "name": "info_uploader",
+        "value": "You can filter by Uploader by entering a Case Sensitive username, or leave empty to get all results.<br>Note: this is the username of the Uploader and not the Groupname that often show up at the end of 1337x titles, eg -GalaxyRG."
+      },
+      {
+        "name": "info_flaresolverr",
+        "value": "This site may use Cloudflare DDoS Protection, therefore Prowlarr requires <a href=\"https://wiki.servarr.com/prowlarr/faq#can-i-use-flaresolverr-indexers\" target=\"_blank\" rel=\"noreferrer\">FlareSolverr</a> to access it."
+      },
+      {
+        "name": "downloadlink",
+        "value": 0
+      },
+      {
+        "name": "downloadlink2",
+        "value": 1
+      },
+      {
+        "name": "info_download",
+        "value": "As the iTorrents .torrent download link on this site is known to fail from time to time, we suggest using the magnet link as a fallback. The BTCache and Torrage services are not supported because they require additional user interaction (a captcha for BTCache and a download button on Torrage.)"
+      },
+      {
+        "name": "disablesort",
+        "value": false
+      },
+      {
+        "name": "sort",
+        "value": 2
+      },
+      {
+        "name": "type",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "name": "kickasstorrents.ws",
+    "definitionName": "kickasstorrents-ws",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "definitionFile",
+        "value": "kickasstorrents-ws"
+      },
+      {
+        "name": "baseUrl",
+        "value": null
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      },
+      {
+        "name": "sort",
+        "value": 2
+      },
+      {
+        "name": "type",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "name": "The Pirate Bay",
+    "definitionName": "thepiratebay",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "definitionFile",
+        "value": "thepiratebay"
+      },
+      {
+        "name": "baseUrl",
+        "value": null
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      },
+      {
+        "name": "apiurl",
+        "value": "apibay.org"
+      },
+      {
+        "name": "uploader",
+        "value": ""
+      },
+      {
+        "name": "info_uploader",
+        "value": "You can filter by Uploader by entering a Case Sensitive username, or leave empty to get all results.<br>Note: this is the username of the Uploader and not the Groupname that often show up at the end of TPB titles, eg -MeGusta."
+      }
+    ]
+  },
+  {
+    "name": "YTS",
+    "definitionName": "yts",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "definitionFile",
+        "value": "yts"
+      },
+      {
+        "name": "baseUrl",
+        "value": null
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      },
+      {
+        "name": "apiurl",
+        "value": "movies-api.accel.li"
+      }
+    ]
+  }
+]
