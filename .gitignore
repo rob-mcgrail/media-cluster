@@ -3,3 +3,6 @@ config/
 
 # API keys for service access
 .api_keys
+
+# Exported settings are safe to commit
+!settings/
