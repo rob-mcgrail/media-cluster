@@ -81,6 +81,15 @@ services:
       - 6881:6881/udp
     restart: unless-stopped
 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - TZ=${TZ}
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+
 networks:
   default:
     ipam:
