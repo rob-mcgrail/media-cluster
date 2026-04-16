@@ -86,7 +86,7 @@ To back up settings after making changes:
 
 This exports current settings to `settings/` (secrets are stripped).
 
-### 5. Movie Bot cron
+### 6. Movie Bot cron
 
 Add to your crontab (`crontab -e`):
 
