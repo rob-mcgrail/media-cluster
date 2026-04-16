@@ -29,6 +29,50 @@
       transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
+
+    /* ---- desktop grid ---- */
+    .desktop-grid { display: none; }
+    @media (min-width: 900px) {
+      .viewport { display: none !important; }
+      .desktop-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: 1fr 1fr;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        height: 100vh;
+        overflow: hidden;
+      }
+      .desktop-grid .panel-history {
+        grid-column: 2;
+        grid-row: 1 / 3;
+      }
+      .desktop-grid .panel {
+        width: auto; height: auto;
+        border-radius: 16px;
+        border: 1px solid #1e1e2e;
+        overflow-y: auto;
+        padding: 0.75rem;
+        scrollbar-width: none;
+      }
+      .desktop-grid .panel::-webkit-scrollbar { display: none; }
+      .desktop-grid .panel-history  { border-color: #1a3a2a; }
+      .desktop-grid .panel-torrents { border-color: #0e1a3a; }
+      .desktop-grid .panel-status   { border-color: #1e1a2e; position: relative; }
+      .desktop-grid .panel-links    { border-color: #2a2610; }
+      .desktop-grid .panel-blank    { border-color: #1e1e2e; background: #08080e; }
+      .desktop-grid .dots { display: none; }
+      .desktop-grid .crab-zone { height: 70px; }
+      .desktop-grid .crab { font-size: 2.5rem; }
+      .desktop-grid .fish-zone { height: 60px; }
+      .desktop-grid .fish { font-size: 2rem; }
+      .desktop-grid .octo-zone { height: 60px; }
+      .desktop-grid .octopus { font-size: 2.2rem; }
+      .desktop-grid .bee-zone { height: 60px; }
+      .desktop-grid .bee { font-size: 1.6rem; }
+      .desktop-grid.paused .critter { animation-play-state: paused !important; }
+    }
+
     /* ---- shared panel ---- */
     .panel {
       display: flex;
@@ -377,7 +421,7 @@
     <!-- page 0: history (left) -->
     <div class="panel panel-history scrollable" id="panelHistory">
       <div class="panel-inner">
-        <div class="fish-zone"><div class="fish">🐟</div></div>
+        <div class="fish-zone"><div class="fish critter">🐟</div></div>
         <div class="section-title-green">RECENT</div>
         <div id="historyList"></div>
         <div class="dots"><div class="dot" data-p="0"></div><div class="dot" data-p="1"></div><div class="dot" data-p="2"></div><div class="dot" data-p="3"></div><div class="dot" data-p="4"></div></div>
@@ -387,7 +431,7 @@
     <!-- page 1: main (center) -->
     <div class="panel" id="panelMain">
       <div class="panel-inner">
-        <div class="crab-zone" id="crabZone"><div class="crab" id="crab">🦀</div></div>
+        <div class="crab-zone" id="crabZone"><div class="crab critter" id="crab">🦀</div></div>
         <div class="header">
           <div class="title">MOVIE BOT</div>
           <div class="subtitle">Leave a message for Movie Bot</div>
@@ -404,7 +448,7 @@
     <!-- page 2: torrents -->
     <div class="panel panel-torrents scrollable" id="panelTorrents">
       <div class="panel-inner">
-        <div class="octo-zone"><div class="octopus">🐙</div></div>
+        <div class="octo-zone"><div class="octopus critter">🐙</div></div>
         <div class="section-title-blue">DOWNLOADS</div>
         <div class="torrent-filters" id="torrentFilters">
           <button class="filter-btn active" data-filter="all">All</button>
@@ -431,8 +475,8 @@
     <div class="panel panel-links scrollable" id="panelLinks">
       <div class="panel-inner">
         <div class="bee-zone">
-          <div class="bee bee-0">🐝</div>
-          <div class="bee bee-1">🐝</div>
+          <div class="bee critter bee-0">🐝</div>
+          <div class="bee critter bee-1">🐝</div>
         </div>
         <div class="section-title-yellow">SERVICES</div>
         <a class="service-link" href="https://jellyfin.office-computer-online-worldwide.org" target="_blank" rel="noopener noreferrer">
@@ -470,8 +514,13 @@
     </div>
   </div>
 
+  <div class="desktop-grid" id="desktopGrid">
+    <!-- panels moved here by JS on desktop -->
+  </div>
+
   <script>
     const viewport = document.getElementById('viewport');
+    const desktopGrid = document.getElementById('desktopGrid');
     const crabZone = document.getElementById('crabZone');
     const crab = document.getElementById('crab');
     const historyList = document.getElementById('historyList');
@@ -521,6 +570,7 @@
     // ---- bug simulation (requestAnimationFrame) ----
     const bugZoneEl = document.getElementById('bugZone');
     const bugs = [];
+    let bugsRunning = true;
     const BOUNDS = { xMin: 2, xMax: 92, yMin: 67, yMax: 95 };
     const STARTLE_R = 5;   // % — triggers dash
     const REPEL_R = 8;     // % — gentle avoidance
@@ -529,7 +579,7 @@
       const emojis = ['🪲', '🦗', '🐜', '🪳', '🐛'];
       const el = document.createElement('div');
       el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-      el.className = 'bug';
+      el.className = 'bug critter';
       el.style.fontSize = (0.9 + Math.random() * 0.5) + 'rem';
       el.style.opacity = 0.3 + Math.random() * 0.35;
       el.style.transition = 'left 0.08s linear, top 0.08s linear';
@@ -553,6 +603,7 @@
 
     let bugLast = performance.now();
     function tickBugs(now) {
+      if (!bugsRunning) return;
       const dt = Math.min((now - bugLast) / 1000, 0.1);
       bugLast = now;
 
@@ -649,11 +700,12 @@
     spawnBug(); spawnBug(); spawnBug();
     requestAnimationFrame(tickBugs);
 
+
     function spawnBee() {
       const zone = document.querySelector('.bee-zone');
       const bee = document.createElement('div');
       bee.textContent = '🐝';
-      bee.className = 'bee';
+      bee.className = 'bee critter';
       const dur = 4 + Math.random() * 4;
       const name = `bonusbee${Date.now()}`;
       const kf = `
@@ -961,6 +1013,69 @@
         setTimeout(() => { status.className = 'status'; status.textContent = ''; }, 4000);
       }
     }
+    // ---- layout: mobile vs desktop ----
+    const panels = [
+      document.getElementById('panelHistory'),
+      document.getElementById('panelMain'),
+      document.getElementById('panelTorrents'),
+      document.getElementById('panelStatus'),
+      document.getElementById('panelLinks'),
+    ];
+    let currentLayout = null;
+    let pollTimer = null;
+
+    function switchLayout() {
+      const desktop = window.innerWidth >= 900;
+      if (desktop && currentLayout !== 'desktop') {
+        currentLayout = 'desktop';
+        // grid: col1=[moviebot, downloads] col2=[history full] col3=[server, services]
+        [panels[1], panels[2], panels[0], panels[3], panels[4]]
+          .forEach(p => desktopGrid.appendChild(p));
+        // load all data immediately
+        loadHistory(); loadTorrents(); loadStatus();
+        // auto-poll every 15s
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(() => {
+          loadHistory(); loadTorrents(); loadStatus();
+        }, 15000);
+      } else if (!desktop && currentLayout !== 'mobile') {
+        currentLayout = 'mobile';
+        // move panels back into swipe viewport (in order)
+        panels.forEach(p => viewport.appendChild(p));
+        // stop polling
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        // reset swipe position
+        setPos(-page * W(), false);
+      }
+    }
+
+    switchLayout();
+    window.addEventListener('resize', switchLayout);
+
+    // desktop: click panel to spawn its critter
+    if (window.innerWidth >= 900) {
+      document.getElementById('panelStatus').addEventListener('click', spawnBug);
+      document.getElementById('panelLinks').addEventListener('click', spawnBee);
+    }
+
+    // pause all animations when desktop window loses focus
+    window.addEventListener('blur', () => {
+      if (window.innerWidth >= 900) {
+        desktopGrid.classList.add('paused');
+        bugsRunning = false;
+      }
+    });
+    window.addEventListener('focus', () => {
+      if (window.innerWidth >= 900) {
+        desktopGrid.classList.remove('paused');
+        if (!bugsRunning) {
+          bugsRunning = true;
+          bugLast = performance.now();
+          requestAnimationFrame(tickBugs);
+        }
+      }
+    });
+
   </script>
 </body>
 </html>
