@@ -1,0 +1,25 @@
+# API keys for media-cluster services
+# Copy this to .api_keys and fill in your values:
+#   cp .api_keys.example .api_keys
+
+SONARR_URL=http://localhost:8989
+SONARR_API_KEY=your-sonarr-api-key
+
+RADARR_URL=http://localhost:7878
+RADARR_API_KEY=your-radarr-api-key
+
+PROWLARR_URL=http://localhost:9696
+PROWLARR_API_KEY=your-prowlarr-api-key
+
+JELLYFIN_URL=http://localhost:8096
+JELLYFIN_API_KEY=your-jellyfin-api-key
+
+BAZARR_URL=http://localhost:6767
+BAZARR_API_KEY=your-bazarr-api-key
+
+# qBittorrent uses subnet whitelist auth (172.20.0.0/16) — no credentials needed from the host
+QBITTORRENT_URL=http://localhost:8080
+
+# Cloudflare — DNS-01 challenge for Caddy HTTPS certs
+# Create at: Cloudflare Dashboard > My Profile > API Tokens > Edit zone DNS
+CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
