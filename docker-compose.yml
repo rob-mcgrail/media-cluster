@@ -126,6 +126,20 @@ services:
       - 6767:6767
     restart: unless-stopped
 
+  dashboard:
+    build: ./dashboard
+    container_name: dashboard
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    volumes:
+      - ./prompts:/prompts
+      - ./dashboard/public:/app/public
+      - ${DATA_ROOT}:/hostdata:ro
+    restart: unless-stopped
+
   caddy:
     build: ./caddy
     container_name: caddy

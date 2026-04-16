@@ -1,0 +1,7 @@
+{
+  "name": "media-cluster-dashboard",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "bun run server.ts"
+  }
+}

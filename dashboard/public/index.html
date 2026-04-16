@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Movie Bot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #08080e;
+      color: #d4d4d8;
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    .viewport {
+      display: flex;
+      width: 400vw;
+      height: 100dvh;
+    }
+    .viewport.animating {
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* ---- shared panel ---- */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100dvh;
+      flex-shrink: 0;
+      padding: env(safe-area-inset-top, 1rem) 1rem env(safe-area-inset-bottom, 1rem);
+      position: relative;
+    }
+    .panel-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .panel.scrollable {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ---- dot indicator ---- */
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding: 0.5rem 0 0.25rem;
+      flex-shrink: 0;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #2a2a3a;
+      transition: background 0.3s;
+    }
+    .dot.active { background: #888; }
+
+    /* ---- crab ---- */
+    .crab-zone {
+      height: 100px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .crab {
+      font-size: 3.5rem;
+      position: absolute;
+      top: 20px; left: 0;
+      animation: scuttle 6s ease-in-out infinite;
+      filter: drop-shadow(0 0 12px rgba(255, 90, 40, 0.4));
+      cursor: pointer;
+      user-select: none;
+      line-height: 1;
+    }
+    .crab::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 50%;
+      transform: translateX(-50%);
+      width: 40px; height: 6px;
+      background: radial-gradient(ellipse, rgba(255, 90, 40, 0.15), transparent);
+      border-radius: 50%;
+      animation: shadow-pulse 0.4s ease-in-out infinite alternate;
+    }
+    @keyframes scuttle {
+      0%   { left: 5%;  transform: scaleX(1) translateY(0); }
+      12%  { transform: scaleX(1) translateY(-6px); }
+      25%  { transform: scaleX(1) translateY(0); }
+      37%  { transform: scaleX(1) translateY(-6px); }
+      48%  { left: calc(100% - 4rem); transform: scaleX(1) translateY(0); }
+      50%  { left: calc(100% - 4rem); transform: scaleX(-1) translateY(0); }
+      62%  { transform: scaleX(-1) translateY(-6px); }
+      75%  { transform: scaleX(-1) translateY(0); }
+      87%  { transform: scaleX(-1) translateY(-6px); }
+      98%  { left: 5%; transform: scaleX(-1) translateY(0); }
+      100% { left: 5%; transform: scaleX(1) translateY(0); }
+    }
+    @keyframes shadow-pulse {
+      from { opacity: 0.6; width: 36px; }
+      to   { opacity: 1; width: 44px; }
+    }
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 140, 80, 0.25), rgba(255, 90, 40, 0.08));
+      border: 1px solid rgba(255, 120, 60, 0.12);
+      animation: rise 2.5s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes rise {
+      0%   { opacity: 0.8; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-60px) scale(0.3); }
+    }
+
+    /* ---- main header / form ---- */
+    .header { text-align: center; flex-shrink: 0; margin-bottom: 1.25rem; }
+    .title {
+      font-size: 1.3rem; font-weight: 700; letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #ff6b35, #ff9f1c);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .subtitle { font-size: 0.8rem; color: #52525b; margin-top: 0.3rem; }
+    .form { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; min-height: 0; padding-bottom: 0.5rem; }
+    textarea {
+      flex: 1; background: #12121a; border: 1px solid #1e1e2e; border-radius: 14px;
+      color: #d4d4d8; font-family: inherit; font-size: 1rem; line-height: 1.5;
+      padding: 1rem; resize: none; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    textarea:focus { border-color: #ff6b35; box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1); }
+    textarea::placeholder { color: #3f3f4a; }
+    .send-btn {
+      background: linear-gradient(135deg, #ff6b35, #e85d26); color: #fff;
+      border: none; border-radius: 14px; padding: 1rem; font-size: 1.05rem; font-weight: 600;
+      cursor: pointer; transition: transform 0.1s, opacity 0.2s; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .send-btn:active { transform: scale(0.97); }
+    .send-btn:disabled { opacity: 0.35; transform: none; }
+    .status {
+      text-align: center; font-size: 0.8rem; min-height: 1.5rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: color 0.3s; color: #52525b;
+    }
+    .status.ok { color: #4ade80; }
+    .status.fail { color: #f87171; }
+
+    /* ---- history (green) ---- */
+    .panel-history { background: #080e0a; }
+    .section-title-green { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em; color: #4ade80; margin-bottom: 1.25rem; }
+    .fish-zone { height: 80px; position: relative; overflow: hidden; flex-shrink: 0; }
+    .fish {
+      font-size: 3rem; position: absolute; top: 16px;
+      animation: swim 5s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.3));
+      user-select: none; line-height: 1;
+    }
+    @keyframes swim {
+      0%   { left: calc(100% - 4rem); transform: scaleX(-1) translateY(0); }
+      15%  { transform: scaleX(-1) translateY(-5px) rotate(-3deg); }
+      30%  { transform: scaleX(-1) translateY(2px) rotate(2deg); }
+      48%  { left: 5%; transform: scaleX(-1) translateY(0); }
+      50%  { left: 5%; transform: scaleX(1) translateY(0); }
+      65%  { transform: scaleX(1) translateY(-5px) rotate(3deg); }
+      80%  { transform: scaleX(1) translateY(2px) rotate(-2deg); }
+      98%  { left: calc(100% - 4rem); transform: scaleX(1) translateY(0); }
+      100% { left: calc(100% - 4rem); transform: scaleX(-1) translateY(0); }
+    }
+    .history-empty { color: #3f3f4a; text-align: center; margin-top: 3rem; font-size: 0.9rem; }
+    .history-item {
+      background: #0a1a10; border: 1px solid #1a3a2a; border-radius: 14px;
+      padding: 1rem; margin-bottom: 0.75rem;
+    }
+    .history-prompt { font-size: 0.85rem; font-weight: 600; color: #4ade80; margin-bottom: 0.6rem; line-height: 1.4; }
+    .history-result { font-size: 0.8rem; color: #a1a1aa; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+    .history-pending { font-size: 0.8rem; color: #52525b; font-style: italic; }
+    .history-item.pending { border-color: #2a1a3a; background: #120e1a; }
+    .history-item.pending .history-prompt { color: #c084fc; }
+    .history-waiting { font-size: 0.8rem; color: #8b6adf; font-style: italic; }
+
+    /* ---- torrents (neon blue) ---- */
+    .panel-torrents { background: #06080e; }
+    .octo-zone { height: 90px; position: relative; overflow: hidden; flex-shrink: 0; }
+    .octopus {
+      font-size: 3.2rem; position: absolute; top: 18px;
+      animation: drift 7s ease-in-out infinite;
+      filter: drop-shadow(0 0 14px rgba(0, 180, 255, 0.4));
+      user-select: none; line-height: 1;
+    }
+    @keyframes drift {
+      0%   { left: 10%; transform: translateY(0) rotate(0deg); }
+      25%  { transform: translateY(-8px) rotate(5deg); }
+      50%  { left: calc(100% - 4rem); transform: translateY(0) rotate(-3deg); }
+      75%  { transform: translateY(-6px) rotate(4deg); }
+      100% { left: 10%; transform: translateY(0) rotate(0deg); }
+    }
+    .section-title-blue {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;
+      color: #00d4ff; margin-bottom: 1rem;
+      text-shadow: 0 0 10px rgba(0, 180, 255, 0.3);
+    }
+    .torrent-filters {
+      display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: #0a0e1a; border: 1px solid #0e1a3a; border-radius: 10px;
+      color: #4a6a8a; font-family: inherit; font-size: 0.75rem; font-weight: 600;
+      padding: 0.35rem 0.7rem; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .filter-btn.active {
+      background: rgba(0, 180, 255, 0.12); border-color: rgba(0, 180, 255, 0.3); color: #00d4ff;
+    }
+    .torrent-empty { color: #2a3a4a; text-align: center; margin-top: 3rem; font-size: 0.9rem; }
+    .torrent-item {
+      background: #0a0e1a; border: 1px solid #0e1a3a; border-radius: 14px;
+      padding: 1rem; margin-bottom: 0.75rem;
+    }
+    .torrent-name { font-size: 0.9rem; font-weight: 600; color: #00d4ff; margin-bottom: 0.5rem; line-height: 1.3; }
+    .torrent-meta { font-size: 0.75rem; color: #6a7a8a; line-height: 1.6; }
+    .torrent-meta span { margin-right: 0.75rem; }
+    .torrent-bar {
+      height: 4px; border-radius: 2px; background: #0e1a3a;
+      margin-top: 0.5rem; overflow: hidden;
+    }
+    .torrent-bar-fill {
+      height: 100%; border-radius: 2px;
+      background: linear-gradient(90deg, #0066ff, #00d4ff);
+      box-shadow: 0 0 8px rgba(0, 180, 255, 0.4);
+      transition: width 0.5s ease;
+    }
+    .badge {
+      display: inline-block; font-size: 0.65rem; font-weight: 600;
+      padding: 0.15rem 0.4rem; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .badge-dl { background: rgba(0, 140, 255, 0.15); color: #00aaff; }
+    .badge-seed { background: rgba(0, 255, 140, 0.12); color: #00ff8a; }
+    .badge-stall { background: rgba(255, 180, 0, 0.12); color: #ffaa00; }
+    .badge-pause { background: rgba(120, 120, 120, 0.15); color: #888; }
+
+    /* ---- server status (purple) ---- */
+    .panel-status { background: #0a060e; }
+    .section-title-purple {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;
+      color: #c084fc; margin-bottom: 1rem;
+      text-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+    }
+    .bug-zone {
+      height: 50px; position: relative; overflow: hidden; flex-shrink: 0;
+      margin-top: auto;
+    }
+    .bug {
+      position: absolute; bottom: 2px; font-size: 1.5rem; user-select: none; line-height: 1;
+      filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
+    }
+    .bug-0 { animation: crawl0 8s linear infinite; }
+    .bug-1 { animation: crawl1 11s linear infinite; }
+    .bug-2 { animation: crawl2 6.5s linear infinite; }
+    @keyframes crawl0 {
+      0%   { left: -2rem; transform: scaleX(1) translateY(0); }
+      5%   { transform: scaleX(1) translateY(-2px); }
+      10%  { transform: scaleX(1) translateY(0); }
+      15%  { transform: scaleX(1) translateY(-2px); }
+      20%  { transform: scaleX(1) translateY(0); }
+      48%  { left: calc(100% + 2rem); transform: scaleX(1) translateY(0); }
+      50%  { left: calc(100% + 2rem); transform: scaleX(-1) translateY(0); }
+      55%  { transform: scaleX(-1) translateY(-2px); }
+      60%  { transform: scaleX(-1) translateY(0); }
+      65%  { transform: scaleX(-1) translateY(-2px); }
+      70%  { transform: scaleX(-1) translateY(0); }
+      98%  { left: -2rem; transform: scaleX(-1) translateY(0); }
+      100% { left: -2rem; transform: scaleX(1) translateY(0); }
+    }
+    @keyframes crawl1 {
+      0%   { left: calc(100% + 2rem); transform: scaleX(-1) translateY(0); }
+      3%   { transform: scaleX(-1) translateY(-3px); }
+      6%   { transform: scaleX(-1) translateY(0); }
+      12%  { transform: scaleX(-1) translateY(-1px); }
+      15%  { transform: scaleX(-1) translateY(0); }
+      25%  { left: 60%; transform: scaleX(-1) translateY(-2px); }
+      27%  { left: 60%; transform: scaleX(-1) translateY(0); } /* pause */
+      30%  { left: 60%; transform: scaleX(-1) translateY(0); }
+      48%  { left: -2rem; transform: scaleX(-1) translateY(0); }
+      50%  { left: -2rem; transform: scaleX(1) translateY(0); }
+      55%  { transform: scaleX(1) translateY(-2px); }
+      58%  { transform: scaleX(1) translateY(0); }
+      98%  { left: calc(100% + 2rem); transform: scaleX(1) translateY(0); }
+      100% { left: calc(100% + 2rem); transform: scaleX(-1) translateY(0); }
+    }
+    @keyframes crawl2 {
+      0%   { left: 30%; transform: scaleX(1) translateY(0); }
+      4%   { transform: scaleX(1) translateY(-3px); }
+      8%   { transform: scaleX(1) translateY(0); }
+      40%  { left: calc(100% + 2rem); transform: scaleX(1) translateY(0); }
+      42%  { left: calc(100% + 2rem); transform: scaleX(-1) translateY(0); }
+      46%  { transform: scaleX(-1) translateY(-2px); }
+      50%  { transform: scaleX(-1) translateY(0); }
+      90%  { left: -2rem; transform: scaleX(-1) translateY(0); }
+      92%  { left: -2rem; transform: scaleX(1) translateY(0); }
+      100% { left: 30%; transform: scaleX(1) translateY(0); }
+    }
+    .stat-card {
+      background: #120e1a; border: 1px solid #1e1a2e; border-radius: 14px;
+      padding: 1rem; margin-bottom: 0.75rem;
+    }
+    .stat-label {
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #8b7aaa; margin-bottom: 0.5rem;
+    }
+    .stat-value {
+      font-size: 1.6rem; font-weight: 700; color: #e2d8f0; line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .stat-detail { font-size: 0.75rem; color: #6a5a8a; }
+    .stat-bar {
+      height: 6px; border-radius: 3px; background: #1e1a2e;
+      margin-top: 0.6rem; overflow: hidden;
+    }
+    .stat-bar-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #7c3aed, #c084fc);
+      box-shadow: 0 0 8px rgba(192, 132, 252, 0.3);
+      transition: width 0.5s ease;
+    }
+    .stat-bar-fill.warn { background: linear-gradient(90deg, #f59e0b, #fbbf24); box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+    .stat-bar-fill.crit { background: linear-gradient(90deg, #ef4444, #f87171); box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+    .load-chips { display: flex; gap: 0.5rem; margin-top: 0.3rem; }
+    .load-chip {
+      background: #1e1a2e; border-radius: 8px; padding: 0.3rem 0.6rem;
+      font-size: 0.75rem; color: #c084fc; font-weight: 600;
+    }
+    .load-chip small { color: #6a5a8a; font-weight: 400; }
+
+    @keyframes crabBlast {
+      0%   { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+      20%  { opacity: 1; transform: translate(calc(var(--tx)*0.3), calc(var(--ty)*0.3)) rotate(calc(var(--rot)*0.3)) scale(1.2); }
+      100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.5); }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport" id="viewport">
+    <!-- page 0: history (left) -->
+    <div class="panel panel-history scrollable" id="panelHistory">
+      <div class="panel-inner">
+        <div class="fish-zone"><div class="fish">🐟</div></div>
+        <div class="section-title-green">RECENT</div>
+        <div id="historyList"></div>
+        <div class="dots"><div class="dot" data-p="0"></div><div class="dot" data-p="1"></div><div class="dot" data-p="2"></div><div class="dot" data-p="3"></div></div>
+      </div>
+    </div>
+
+    <!-- page 1: main (center) -->
+    <div class="panel" id="panelMain">
+      <div class="panel-inner">
+        <div class="crab-zone" id="crabZone"><div class="crab" id="crab">🦀</div></div>
+        <div class="header">
+          <div class="title">MOVIE BOT</div>
+          <div class="subtitle">Leave a message for Movie Bot</div>
+        </div>
+        <div class="form">
+          <textarea id="prompt" placeholder="What would you like Movie Bot to do?"></textarea>
+          <button class="send-btn" id="send">GET TO IT</button>
+          <div class="status" id="status"></div>
+        </div>
+        <div class="dots"><div class="dot" data-p="0"></div><div class="dot" data-p="1"></div><div class="dot" data-p="2"></div><div class="dot" data-p="3"></div></div>
+      </div>
+    </div>
+
+    <!-- page 2: torrents -->
+    <div class="panel panel-torrents scrollable" id="panelTorrents">
+      <div class="panel-inner">
+        <div class="octo-zone"><div class="octopus">🐙</div></div>
+        <div class="section-title-blue">DOWNLOADS</div>
+        <div class="torrent-filters" id="torrentFilters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="downloading">Downloading</button>
+          <button class="filter-btn" data-filter="seeding">Seeding</button>
+          <button class="filter-btn" data-filter="queued">Queued</button>
+        </div>
+        <div id="torrentList"></div>
+        <div class="dots"><div class="dot" data-p="0"></div><div class="dot" data-p="1"></div><div class="dot" data-p="2"></div><div class="dot" data-p="3"></div></div>
+      </div>
+    </div>
+
+    <!-- page 3: server status -->
+    <div class="panel panel-status scrollable" id="panelStatus">
+      <div class="panel-inner">
+        <div class="section-title-purple" style="padding-top:1rem">SERVER</div>
+        <div id="statusCards"></div>
+        <div class="bug-zone">
+          <div class="bug bug-0">🪲</div>
+          <div class="bug bug-1">🦗</div>
+          <div class="bug bug-2">🐜</div>
+        </div>
+        <div class="dots"><div class="dot" data-p="0"></div><div class="dot" data-p="1"></div><div class="dot" data-p="2"></div><div class="dot" data-p="3"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const viewport = document.getElementById('viewport');
+    const crabZone = document.getElementById('crabZone');
+    const crab = document.getElementById('crab');
+    const historyList = document.getElementById('historyList');
+    const torrentList = document.getElementById('torrentList');
+    const allDots = document.querySelectorAll('.dot');
+    const PAGES = 4;
+    const statusCards = document.getElementById('statusCards');
+
+    // ---- unified touch: swipe + pull-to-refresh ----
+    const W = () => window.innerWidth;
+    let page = 1;
+    let startX = 0, startY = 0, startTime = 0;
+    let gesture = null; // null | 'swipe' | 'pull' | 'scroll'
+    let pullPanel = null;
+
+    function setPos(px, animate) {
+      if (animate) {
+        viewport.classList.add('animating');
+        viewport.addEventListener('transitionend', () => viewport.classList.remove('animating'), { once: true });
+      } else {
+        viewport.classList.remove('animating');
+      }
+      viewport.style.transform = `translateX(${px}px)`;
+    }
+
+    function updateDots() {
+      allDots.forEach(d => d.classList.toggle('active', +d.dataset.p === page));
+    }
+
+    function snapTo(p) {
+      p = Math.max(0, Math.min(PAGES - 1, p));
+      page = p;
+      setPos(-p * W(), true);
+      updateDots();
+      if (p === 0) loadHistory();
+      if (p === 2) loadTorrents();
+      if (p === 3) loadStatus();
+    }
+
+    function onPageLoad(p) {
+      if (p === 0) loadHistory();
+      else if (p === 2) loadTorrents();
+      else if (p === 3) loadStatus();
+      else location.reload();
+    }
+
+    setPos(-W(), false);
+    updateDots();
+
+    document.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+      gesture = null;
+      // check if pull-to-refresh is possible
+      const panel = e.target.closest('.panel');
+      if (panel) {
+        const isScrolled = panel.classList.contains('scrollable') && panel.scrollTop > 0;
+        pullPanel = isScrolled ? null : panel;
+      } else {
+        pullPanel = null;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (gesture === 'scroll') return;
+
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+
+      // decide gesture after 10px of movement
+      if (!gesture && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+          gesture = 'swipe';
+        } else if (dy > 0 && pullPanel) {
+          gesture = 'pull';
+        } else {
+          gesture = 'scroll';
+          return;
+        }
+      }
+
+      if (gesture === 'swipe') {
+        const base = -page * W();
+        let raw = base + dx;
+        const minX = -(PAGES - 1) * W();
+        if (raw > 0) raw = raw * 0.2;
+        if (raw < minX) raw = minX + (raw - minX) * 0.2;
+        viewport.classList.remove('animating');
+        viewport.style.transform = `translateX(${raw}px)`;
+      }
+
+      if (gesture === 'pull') {
+        const pull = Math.min(Math.max(dy * 0.4, 0), 80);
+        pullPanel.style.transition = 'none';
+        pullPanel.style.transform = `translateY(${pull}px)`;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      if (gesture === 'swipe') {
+        const dx = e.changedTouches[0].clientX - startX;
+        const elapsed = Date.now() - startTime;
+        const velocity = Math.abs(dx) / elapsed;
+        if (velocity > 0.4 || Math.abs(dx) > W() * 0.3) {
+          if (dx > 0 && page > 0) { snapTo(page - 1); gesture = null; return; }
+          if (dx < 0 && page < PAGES - 1) { snapTo(page + 1); gesture = null; return; }
+        }
+        snapTo(page);
+      }
+
+      if (gesture === 'pull' && pullPanel) {
+        const t = pullPanel.style.transform;
+        const y = parseFloat(t.match(/[\d.]+/)?.[0]) || 0;
+        pullPanel.style.transition = 'transform 0.25s ease';
+        pullPanel.style.transform = '';
+        if (y > 30) onPageLoad(page);
+      }
+
+      gesture = null;
+      pullPanel = null;
+    }, { passive: true });
+
+    window.addEventListener('resize', () => setPos(-page * W(), false));
+
+    // ---- history ----
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/history');
+        const items = await res.json();
+        if (!items.length) {
+          historyList.innerHTML = '<div class="history-empty">No prompts yet.</div>';
+          return;
+        }
+        historyList.innerHTML = items.map(item => `
+          <div class="history-item${item.pending ? ' pending' : ''}">
+            <div class="history-prompt">${esc(item.prompt)}</div>
+            ${item.pending
+              ? `<div class="history-waiting">Waiting for Movie Bot...</div>`
+              : item.result
+                ? `<div class="history-result">${esc(item.result)}</div>`
+                : `<div class="history-pending">No response recorded.</div>`}
+          </div>
+        `).join('');
+      } catch {
+        historyList.innerHTML = '<div class="history-empty">Could not load history.</div>';
+      }
+    }
+
+    // ---- torrents ----
+    let allTorrents = [];
+    let activeFilter = 'all';
+
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderTorrents();
+      });
+    });
+
+    function badgeCls(cat) {
+      if (cat === 'downloading') return 'badge-dl';
+      if (cat === 'seeding') return 'badge-seed';
+      if (cat === 'queued') return 'badge-stall';
+      return 'badge-pause';
+    }
+
+    function renderTorrents() {
+      const filtered = activeFilter === 'all'
+        ? allTorrents
+        : allTorrents.filter(t => t.category === activeFilter);
+      if (!filtered.length) {
+        torrentList.innerHTML = `<div class="torrent-empty">${allTorrents.length ? 'None matching filter.' : 'No active torrents.'}</div>`;
+        return;
+      }
+      torrentList.innerHTML = filtered.map(t => `
+        <div class="torrent-item">
+          <div class="torrent-name">${esc(t.name)}</div>
+          <div class="torrent-meta">
+            <span class="badge ${badgeCls(t.category)}">${t.category}</span>
+            <span>${t.downloaded} / ${t.size}</span>
+            ${t.eta ? `<span>ETA ${t.eta}</span>` : ''}
+            ${t.category === 'downloading' ? `<span>${t.dlspeed}</span>` : ''}
+            ${t.category === 'seeding' ? `<span>↑ ${t.upspeed}</span>` : ''}
+          </div>
+          <div class="torrent-bar"><div class="torrent-bar-fill" style="width:${t.progress}%"></div></div>
+        </div>
+      `).join('');
+    }
+
+    async function loadTorrents() {
+      try {
+        const res = await fetch('/api/torrents');
+        allTorrents = await res.json();
+        renderTorrents();
+      } catch {
+        allTorrents = [];
+        torrentList.innerHTML = '<div class="torrent-empty">Could not load torrents.</div>';
+      }
+    }
+
+    // ---- server status ----
+    function fmtBytes(b) {
+      if (b < 1073741824) return (b / 1048576).toFixed(0) + ' MB';
+      return (b / 1073741824).toFixed(1) + ' GB';
+    }
+
+    function barClass(pct) {
+      if (pct >= 90) return 'stat-bar-fill crit';
+      if (pct >= 75) return 'stat-bar-fill warn';
+      return 'stat-bar-fill';
+    }
+
+    async function loadStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const s = await res.json();
+        if (s.error) throw new Error();
+        statusCards.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-label">Load Average</div>
+            <div class="stat-value">${s.load[0]}</div>
+            <div class="load-chips">
+              <div class="load-chip">${s.load[0]} <small>1m</small></div>
+              <div class="load-chip">${s.load[1]} <small>5m</small></div>
+              <div class="load-chip">${s.load[2]} <small>15m</small></div>
+            </div>
+            <div class="stat-detail">${s.cores} cores</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Memory</div>
+            <div class="stat-value">${s.mem.pct}%</div>
+            <div class="stat-detail">${fmtBytes(s.mem.used)} / ${fmtBytes(s.mem.total)}</div>
+            <div class="stat-bar"><div class="${barClass(s.mem.pct)}" style="width:${s.mem.pct}%"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Swap</div>
+            <div class="stat-value">${s.swap.pct}%</div>
+            <div class="stat-detail">${fmtBytes(s.swap.used)} / ${fmtBytes(s.swap.total)}</div>
+            <div class="stat-bar"><div class="${barClass(s.swap.pct)}" style="width:${s.swap.pct}%"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Storage — /srv/data</div>
+            <div class="stat-value">${s.disk.pct}%</div>
+            <div class="stat-detail">${fmtBytes(s.disk.used)} / ${fmtBytes(s.disk.total)}</div>
+            <div class="stat-bar"><div class="${barClass(s.disk.pct)}" style="width:${s.disk.pct}%"></div></div>
+          </div>
+        `;
+      } catch {
+        statusCards.innerHTML = '<div class="torrent-empty">Could not load status.</div>';
+      }
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // ---- crab explosion on submit ----
+    function crabExplosion() {
+      const panel = document.getElementById('panelMain');
+      for (let i = 0; i < 50; i++) {
+        const c = document.createElement('div');
+        c.textContent = '🦀';
+        c.style.cssText = `
+          position:fixed; font-size:${1.2 + Math.random() * 2.5}rem; z-index:9999;
+          left:${Math.random() * 100}vw; top:${50 + (Math.random() - 0.5) * 30}vh;
+          pointer-events:none; user-select:none; line-height:1;
+          animation: crabBlast ${0.8 + Math.random() * 1.2}s cubic-bezier(.15,.9,.3,1) forwards;
+          --tx:${(Math.random() - 0.5) * 400}px;
+          --ty:${-200 - Math.random() * 500}px;
+          --rot:${(Math.random() - 0.5) * 1080}deg;
+        `;
+        document.body.appendChild(c);
+        c.addEventListener('animationend', () => c.remove());
+      }
+    }
+
+    // ---- bubbles ----
+    function spawnBubble() {
+      const rect = crab.getBoundingClientRect();
+      const zone = crabZone.getBoundingClientRect();
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      const size = 4 + Math.random() * 8;
+      b.style.width = size + 'px';
+      b.style.height = size + 'px';
+      b.style.left = (rect.left - zone.left + rect.width / 2 + (Math.random() - 0.5) * 20) + 'px';
+      b.style.top = (rect.top - zone.top + rect.height - 5) + 'px';
+      crabZone.appendChild(b);
+      b.addEventListener('animationend', () => b.remove());
+    }
+    setInterval(spawnBubble, 350);
+
+    // ---- crab click ----
+    crab.addEventListener('click', () => {
+      crab.style.animation = 'none';
+      crab.offsetHeight;
+      crab.style.transition = 'transform 0.5s ease';
+      crab.style.transform = 'rotate(360deg) scale(1.3)';
+      setTimeout(() => { crab.style.transition = ''; crab.style.transform = ''; crab.style.animation = ''; }, 600);
+    });
+
+    // ---- send prompt ----
+    const textarea = document.getElementById('prompt');
+    const btn = document.getElementById('send');
+    const status = document.getElementById('status');
+    btn.addEventListener('click', send);
+    textarea.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send(); });
+
+    async function send() {
+      const text = textarea.value.trim();
+      if (!text) { crabExplosion(); return; }
+      btn.disabled = true;
+      status.className = 'status';
+      status.textContent = 'Sending\u2026';
+      try {
+        const res = await fetch('/api/prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: text }),
+        });
+        if (!res.ok) throw new Error();
+        textarea.value = '';
+        status.className = 'status ok';
+        status.textContent = 'Sent! Movie Bot will pick this up shortly.';
+        crabExplosion();
+      } catch {
+        status.className = 'status fail';
+        status.textContent = 'Failed to send. Try again.';
+      } finally {
+        btn.disabled = false;
+        setTimeout(() => { status.className = 'status'; status.textContent = ''; }, 4000);
+      }
+    }
+  </script>
+</body>
+</html>

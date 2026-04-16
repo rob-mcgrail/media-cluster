@@ -4,5 +4,8 @@ config/
 # API keys for service access
 .api_keys
 
+# User prompts from dashboard (runtime data)
+prompts/
+
 # Exported settings are safe to commit
 !settings/
