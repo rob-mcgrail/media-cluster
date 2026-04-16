@@ -353,8 +353,8 @@
     "title": "HDTV-2160p",
     "weight": 21,
     "minSize": 0,
-    "maxSize": 167,
-    "preferredSize": 140,
+    "maxSize": 200,
+    "preferredSize": 160,
     "id": 24
   },
   {
@@ -368,8 +368,8 @@
     "title": "WEBDL-2160p",
     "weight": 22,
     "minSize": 0,
-    "maxSize": 167,
-    "preferredSize": 140,
+    "maxSize": 200,
+    "preferredSize": 160,
     "id": 25
   },
   {
@@ -383,8 +383,8 @@
     "title": "WEBRip-2160p",
     "weight": 22,
     "minSize": 0,
-    "maxSize": 167,
-    "preferredSize": 140,
+    "maxSize": 200,
+    "preferredSize": 160,
     "id": 26
   },
   {
@@ -398,8 +398,8 @@
     "title": "Bluray-2160p",
     "weight": 23,
     "minSize": 0,
-    "maxSize": 167,
-    "preferredSize": 140,
+    "maxSize": 200,
+    "preferredSize": 160,
     "id": 27
   },
   {

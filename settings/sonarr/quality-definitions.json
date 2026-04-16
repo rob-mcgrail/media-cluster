@@ -122,7 +122,7 @@
     "weight": 8,
     "minSize": 4,
     "maxSize": 57,
-    "preferredSize": 40,
+    "preferredSize": 50,
     "id": 9
   },
   {
@@ -191,7 +191,7 @@
     "weight": 12,
     "minSize": 4,
     "maxSize": 57,
-    "preferredSize": 40,
+    "preferredSize": 50,
     "id": 14
   },
   {
@@ -205,7 +205,7 @@
     "weight": 12,
     "minSize": 4,
     "maxSize": 57,
-    "preferredSize": 40,
+    "preferredSize": 50,
     "id": 15
   },
   {
@@ -219,7 +219,7 @@
     "weight": 13,
     "minSize": 4,
     "maxSize": 57,
-    "preferredSize": 40,
+    "preferredSize": 50,
     "id": 16
   },
   {

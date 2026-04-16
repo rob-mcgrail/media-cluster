@@ -1597,7 +1597,7 @@
   },
   {
     "name": "ROB",
-    "upgradeAllowed": false,
+    "upgradeAllowed": true,
     "cutoff": 7,
     "items": [
       {
