@@ -1,6 +1,8 @@
 {
   "enabled_providers": [
-    "opensubtitlescom"
+    "opensubtitlescom",
+    "podnapisi",
+    "gestdown"
   ],
   "languages": {
     "adaptive_searching": true,
@@ -10,7 +12,7 @@
     "embedded_subs_show_desired": true,
     "hi_extension": "hi",
     "language_equals": [],
-    "single_language": true,
+    "single_language": false,
     "upgrade_subs": true
   }
 }

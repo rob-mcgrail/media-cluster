@@ -55,6 +55,116 @@
     ]
   },
   {
+    "name": "LimeTorrents",
+    "definitionName": "limetorrents",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "definitionFile",
+        "value": "limetorrents"
+      },
+      {
+        "name": "baseUrl",
+        "value": null
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      },
+      {
+        "name": "downloadlink",
+        "value": 1
+      },
+      {
+        "name": "downloadlink2",
+        "value": 0
+      },
+      {
+        "name": "info_download",
+        "value": "As the .torrent download links on this site are known to fail from time to time, you can optionally set as a fallback an automatic alternate link."
+      },
+      {
+        "name": "sort",
+        "value": 0
+      },
+      {
+        "name": "info_category_8000",
+        "value": "LimeTorrents only returns category <b>Other</b> in its <i>Keywordless</i> search results page.</br>To pass your apps' indexer TEST you will need to include the 8000(Other) category."
+      }
+    ]
+  },
+  {
+    "name": "SubsPlease",
+    "definitionName": "SubsPlease",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "baseUrl",
+        "value": "https://subsplease.org/"
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      }
+    ]
+  },
+  {
     "name": "The Pirate Bay",
     "definitionName": "thepiratebay",
     "protocol": "torrent",
@@ -110,57 +220,6 @@
       {
         "name": "info_uploader",
         "value": "You can filter by Uploader by entering a Case Sensitive username, or leave empty to get all results.<br>Note: this is the username of the Uploader and not the Groupname that often show up at the end of TPB titles, eg -MeGusta."
-      }
-    ]
-  },
-  {
-    "name": "YTS",
-    "definitionName": "yts",
-    "protocol": "torrent",
-    "fields": [
-      {
-        "name": "definitionFile",
-        "value": "yts"
-      },
-      {
-        "name": "baseUrl",
-        "value": null
-      },
-      {
-        "name": "baseSettings.queryLimit",
-        "value": null
-      },
-      {
-        "name": "baseSettings.grabLimit",
-        "value": null
-      },
-      {
-        "name": "baseSettings.limitsUnit",
-        "value": 0
-      },
-      {
-        "name": "torrentBaseSettings.appMinimumSeeders",
-        "value": null
-      },
-      {
-        "name": "torrentBaseSettings.seedRatio",
-        "value": null
-      },
-      {
-        "name": "torrentBaseSettings.seedTime",
-        "value": null
-      },
-      {
-        "name": "torrentBaseSettings.packSeedTime",
-        "value": null
-      },
-      {
-        "name": "torrentBaseSettings.preferMagnetUrl",
-        "value": false
-      },
-      {
-        "name": "apiurl",
-        "value": "movies-api.accel.li"
       }
     ]
   }

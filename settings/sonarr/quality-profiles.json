@@ -1596,7 +1596,7 @@
     "id": 6
   },
   {
-    "name": "ROB",
+    "name": "Rob1080",
     "upgradeAllowed": true,
     "cutoff": 7,
     "items": [
@@ -1849,14 +1849,14 @@
         "allowed": false
       }
     ],
-    "minFormatScore": 0,
+    "minFormatScore": -1000,
     "cutoffFormatScore": 0,
     "minUpgradeFormatScore": 1,
     "formatItems": [
       {
         "format": 1,
         "name": "HEVC",
-        "score": -10000
+        "score": 10
       }
     ],
     "id": 7

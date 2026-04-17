@@ -279,7 +279,7 @@
     },
     "title": "HDTV-1080p",
     "weight": 17,
-    "minSize": 0,
+    "minSize": 10,
     "maxSize": 55,
     "preferredSize": 50,
     "id": 19
@@ -294,8 +294,8 @@
     },
     "title": "WEBDL-1080p",
     "weight": 18,
-    "minSize": 0,
-    "maxSize": 55,
+    "minSize": 20,
+    "maxSize": 65,
     "preferredSize": 50,
     "id": 20
   },
@@ -309,8 +309,8 @@
     },
     "title": "WEBRip-1080p",
     "weight": 18,
-    "minSize": 0,
-    "maxSize": 55,
+    "minSize": 20,
+    "maxSize": 90,
     "preferredSize": 50,
     "id": 21
   },
@@ -324,9 +324,9 @@
     },
     "title": "Bluray-1080p",
     "weight": 19,
-    "minSize": 0,
-    "maxSize": 55,
-    "preferredSize": 50,
+    "minSize": 20,
+    "maxSize": 150,
+    "preferredSize": 60,
     "id": 22
   },
   {
@@ -383,7 +383,7 @@
     "title": "WEBRip-2160p",
     "weight": 22,
     "minSize": 0,
-    "maxSize": 200,
+    "maxSize": 250,
     "preferredSize": 160,
     "id": 26
   },
@@ -398,7 +398,7 @@
     "title": "Bluray-2160p",
     "weight": 23,
     "minSize": 0,
-    "maxSize": 200,
+    "maxSize": 280,
     "preferredSize": 160,
     "id": 27
   },

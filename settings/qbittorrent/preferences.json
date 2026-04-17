@@ -16,7 +16,7 @@
   "scheduler_enabled": true,
   "queueing_enabled": true,
   "max_active_downloads": 10,
-  "max_active_uploads": 4,
+  "max_active_uploads": 6,
   "max_active_torrents": 12,
   "listen_port": 6881
 }

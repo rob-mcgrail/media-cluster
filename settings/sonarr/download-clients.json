@@ -3,7 +3,7 @@
     "enable": true,
     "protocol": "torrent",
     "priority": 1,
-    "removeCompletedDownloads": true,
+    "removeCompletedDownloads": false,
     "removeFailedDownloads": true,
     "name": "qBittorrent",
     "fields": [

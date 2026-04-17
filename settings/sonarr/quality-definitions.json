@@ -120,8 +120,8 @@
     },
     "title": "HDTV-1080p",
     "weight": 8,
-    "minSize": 4,
-    "maxSize": 57,
+    "minSize": 5,
+    "maxSize": 100,
     "preferredSize": 50,
     "id": 9
   },
@@ -189,8 +189,8 @@
     },
     "title": "WEBRip-1080p",
     "weight": 12,
-    "minSize": 4,
-    "maxSize": 57,
+    "minSize": 5,
+    "maxSize": 100,
     "preferredSize": 50,
     "id": 14
   },
@@ -203,8 +203,8 @@
     },
     "title": "WEBDL-1080p",
     "weight": 12,
-    "minSize": 4,
-    "maxSize": 57,
+    "minSize": 5,
+    "maxSize": 100,
     "preferredSize": 50,
     "id": 15
   },
@@ -217,8 +217,8 @@
     },
     "title": "Bluray-1080p",
     "weight": 13,
-    "minSize": 4,
-    "maxSize": 57,
+    "minSize": 5,
+    "maxSize": 150,
     "preferredSize": 50,
     "id": 16
   },
