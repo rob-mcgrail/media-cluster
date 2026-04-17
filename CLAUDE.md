@@ -112,6 +112,12 @@ Hardlinks only work within a single branch, so both files must physically live o
 | qBittorrent | 8080 |
 | Bazarr      | 6767 |
 
+## DNS
+
+LAN-only split-horizon setup: a single **wildcard** A record in Cloudflare (gray-cloud, DNS-only) points at the server's LAN IP. Clients on the LAN resolve `*.{DOMAIN}` → LAN IP and connect directly; nothing traverses the public internet. TLS certs are issued via Let's Encrypt DNS-01 challenge (no public reachability required).
+
+If the server's LAN IP changes (e.g. switching from wifi to ethernet), the only update needed is that one Cloudflare wildcard A record — all subdomains follow.
+
 ## jellyfin-proxy
 
 Openresty sidecar that rewrites `PlaybackInfo` on the `jellyfin-force-transcode.{DOMAIN}` subdomain to force HEVC transcoding for clients whose decoders stutter on real HEVC (Android TV). See `openresty/README.md` for the why, architecture, and gotchas.
