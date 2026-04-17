@@ -23,3 +23,6 @@ QBITTORRENT_URL=http://localhost:8080
 # Cloudflare — DNS-01 challenge for Caddy HTTPS certs
 # Create at: Cloudflare Dashboard > My Profile > API Tokens > Edit zone DNS
 CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
+
+# Pi-hole web admin password
+FTLCONF_webserver_api_password=your-pihole-password

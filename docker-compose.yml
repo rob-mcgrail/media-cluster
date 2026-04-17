@@ -160,7 +160,6 @@ services:
       - 443:443
     dns:
       - 1.1.1.1
-      - 8.8.8.8
     restart: unless-stopped
 
   jellyfin-proxy:
@@ -189,6 +188,32 @@ services:
       - TZ=${TZ}
     ports:
       - 8191:8191
+    restart: unless-stopped
+
+  pihole:
+    image: pihole/pihole:2026.04.0
+    container_name: pihole
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    env_file:
+      - .api_keys
+    environment:
+      - TZ=${TZ}
+      - FTLCONF_dns_upstreams=1.1.1.1;1.0.0.1
+      - FTLCONF_dns_listeningMode=all
+      - FTLCONF_database_maxDBdays=7
+    volumes:
+      - ${CONFIG_ROOT}/pihole/etc-pihole:/etc/pihole
+      - ${CONFIG_ROOT}/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+    ports:
+      - "${LAN_IP}:53:53/tcp"
+      - "${LAN_IP}:53:53/udp"
+      - "8090:80"
+    cap_add:
+      - NET_ADMIN
     restart: unless-stopped
 
 networks:

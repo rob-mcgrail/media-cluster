@@ -143,6 +143,7 @@ All services are available via HTTPS at `<service>.yourdomain.org`:
 | Prowlarr | `https://prowlarr.yourdomain.org` |
 | qBittorrent | `https://qbittorrent.yourdomain.org` |
 | Bazarr | `https://bazarr.yourdomain.org` |
+| Pi-hole | `https://pihole.yourdomain.org/admin` |
 
 Services are also available on their original ports via IP for direct access.
 

@@ -111,12 +111,25 @@ Hardlinks only work within a single branch, so both files must physically live o
 | Prowlarr    | 9696 |
 | qBittorrent | 8080 |
 | Bazarr      | 6767 |
+| Pi-hole     | 8090 (web), 53 bound to `${LAN_IP}` |
 
 ## DNS
 
 LAN-only split-horizon setup: a single **wildcard** A record in Cloudflare (gray-cloud, DNS-only) points at the server's LAN IP. Clients on the LAN resolve `*.{DOMAIN}` → LAN IP and connect directly; nothing traverses the public internet. TLS certs are issued via Let's Encrypt DNS-01 challenge (no public reachability required).
 
 If the server's LAN IP changes (e.g. switching from wifi to ethernet), the only update needed is that one Cloudflare wildcard A record — all subdomains follow.
+
+## Pi-hole
+
+Network-wide DNS ad-blocker. Reachable at `https://pihole.{DOMAIN}/admin` (via Caddy) or `http://${LAN_IP}:8090/admin` (direct, fallback).
+
+DNS is bound to `${LAN_IP}:53` only — systemd-resolved stays on loopback (`127.0.0.53`) so host processes still resolve normally. LAN clients point at `${LAN_IP}` via the Orbi's DHCP DNS setting.
+
+Upstream resolvers: `1.1.1.1;1.0.0.1` (Cloudflare). Set via `FTLCONF_dns_upstreams` in the compose file.
+
+Web admin password is in `.api_keys` as `FTLCONF_webserver_api_password` and loaded into the container via `env_file`.
+
+Android-specific notes: each phone's *Private DNS* setting (Settings → Network & Internet) must be **Off** or **Automatic**. Any other value (dns.google, 1dot1dot1dot1.cloudflare-dns.com) bypasses Pi-hole entirely via DoT.
 
 ## jellyfin-proxy
 

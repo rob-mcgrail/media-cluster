@@ -34,3 +34,7 @@ bazarr.{$DOMAIN} {
 www.{$DOMAIN} {
 	reverse_proxy dashboard:8000
 }
+
+pihole.{$DOMAIN} {
+	reverse_proxy pihole:80
+}
