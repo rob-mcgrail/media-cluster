@@ -74,6 +74,24 @@ where:
   Cap escalation at 2 torrents per run (separate from the early-stall
   cap).
 
+### Clean up orphaned missingFiles torrents
+For a torrent that is:
+- in state "missingFiles" (or "error" with missing-file cause) AND
+- 0% progress AND
+- > 24h in that state (not a transient mount blip)
+
+→ Check whether any arr has a queue entry pointing at this torrent:
+  - If yes: DELETE via the arr's queue API with removeFromClient=true
+    and blocklist=true — this specific release failed fully and
+    should not be retried.
+  - If no (pure qBit orphan, arr has already moved on): just delete
+    directly from qBit with deleteFiles=true.
+
+Safety guardrail: if MORE than 10 torrents are in missingFiles state
+at once, DO NOT act — that usually means the storage mount has a
+system-level problem and mass-deletion would be catastrophic. Report
+it as an anomaly instead so a human investigates.
+
 ### Priority boost for fresh small-batch requests
 For each matching recent prompt: find the corresponding torrents in qBit
 and set their priority to "high" + move to the top of the queue
@@ -120,7 +138,8 @@ The structure:
 
   Valid actions: "paused + re-searched", "parked (mostly-done)",
   "resumed after rest", "re-paused after retry",
-  "escalated — removed + re-searched", "priority-boosted".
+  "auto-retired — removed + blocklisted + re-searched",
+  "cleaned up missingFiles orphan", "priority-boosted".
 
   Reason examples:
   - `<5% after 28h, 0 seeds`
@@ -142,7 +161,8 @@ The structure:
   - Priority-boosted: N
   - Resumed from rest: N
   - Re-paused after retry: N
-  - Escalated (removed): N
+  - Auto-retired (removed + blocklisted): N
+  - MissingFiles orphans cleaned: N
 
 If a section has no items, write "_none_" on a line by itself.
 Keep reasoning terse — one line per bullet.

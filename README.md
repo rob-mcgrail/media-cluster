@@ -130,7 +130,7 @@ Add to your crontab (`crontab -e`):
 ```
 
 - **`run-prompt.sh`** — every minute, picks up new user prompts from the dashboard queue and runs Claude Code to process them.
-- **`run-triage.sh`** — every 4 hours, reviews the qBittorrent queue and recent user requests: pauses + re-searches early-stalled torrents, parks mostly-done stalls and retries them after 12h, auto-retires torrents that have been stuck for >7 days (removes + blocklists dead release, triggers fresh search), and priority-boosts fresh small-batch requests. See `movie-bot-download-triage/triage-prompt.txt` for the full decision framework.
+- **`run-triage.sh`** — every 4 hours, reviews the qBittorrent queue and recent user requests: pauses + re-searches early-stalled torrents, parks mostly-done stalls and retries them after 12h, auto-retires torrents stuck for >7 days (removes + blocklists dead release, triggers fresh search), cleans up orphaned `missingFiles` torrents (with a safety cap so a transient mount failure doesn't nuke everything), and priority-boosts fresh small-batch requests. See `movie-bot-download-triage/triage-prompt.txt` for the full decision framework.
 
 ### 9. Pi-hole (optional but recommended)
 
