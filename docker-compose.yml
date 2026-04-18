@@ -160,6 +160,8 @@ services:
       - 443:443
     dns:
       - 1.1.1.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   jellyfin-proxy:
@@ -193,6 +195,7 @@ services:
   pihole:
     image: pihole/pihole:2026.04.0
     container_name: pihole
+    network_mode: host
     logging:
       driver: json-file
       options:
@@ -203,15 +206,13 @@ services:
     environment:
       - TZ=${TZ}
       - FTLCONF_dns_upstreams=1.1.1.1;1.0.0.1
-      - FTLCONF_dns_listeningMode=all
+      - FTLCONF_dns_listeningMode=bind
+      - FTLCONF_dns_interface=eno1
       - FTLCONF_database_maxDBdays=7
+      - FTLCONF_webserver_port=7001o,[::]:7001o
     volumes:
       - ${CONFIG_ROOT}/pihole/etc-pihole:/etc/pihole
       - ${CONFIG_ROOT}/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
-    ports:
-      - "${LAN_IP}:53:53/tcp"
-      - "${LAN_IP}:53:53/udp"
-      - "8090:80"
     cap_add:
       - NET_ADMIN
     restart: unless-stopped

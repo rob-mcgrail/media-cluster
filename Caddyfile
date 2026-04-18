@@ -36,5 +36,5 @@ www.{$DOMAIN} {
 }
 
 pihole.{$DOMAIN} {
-	reverse_proxy pihole:80
+	reverse_proxy host.docker.internal:7001
 }
