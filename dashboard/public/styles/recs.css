@@ -1,0 +1,152 @@
+.panel-recs { background: #050f10; }
+.section-title-teal {
+  font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;
+  color: #2dd4bf; margin-bottom: 1rem;
+  text-shadow: 0 0 10px rgba(45, 212, 191, 0.3);
+}
+
+/* Roaming seagull gliding across the panel */
+.seagull {
+  font-size: 2.2rem; position: absolute; top: 18px;
+  animation: soar 14s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(45, 212, 191, 0.4));
+}
+@keyframes soar {
+  0%   { left: -8%;  transform: scaleX(1)  translateY(0); }
+  15%  { transform: scaleX(1)  translateY(-6px); }
+  30%  { transform: scaleX(1)  translateY(2px); }
+  48%  { left: 95%;  transform: scaleX(1)  translateY(0); }
+  50%  { left: 95%;  transform: scaleX(-1) translateY(0); }
+  65%  { transform: scaleX(-1) translateY(-6px); }
+  80%  { transform: scaleX(-1) translateY(2px); }
+  98%  { left: -8%;  transform: scaleX(-1) translateY(0); }
+  100% { left: -8%;  transform: scaleX(1)  translateY(0); }
+}
+
+.recs-filters { display: flex; gap: 0.4rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+.recs-filters .filter-btn {
+  background: #051518; border-color: #0e2a2e; color: #3a8a82;
+}
+.recs-filters .filter-btn.active {
+  background: rgba(45, 212, 191, 0.12); border-color: rgba(45, 212, 191, 0.35); color: #2dd4bf;
+}
+
+.recs-empty { color: #3a5a58; text-align: center; margin-top: 3rem; font-size: 0.9rem; }
+
+.reflection-box {
+  background: #061619; border: 1px solid #0e2a2e; border-radius: 14px;
+  padding: 0.85rem 0.95rem; margin-bottom: 0.75rem;
+}
+.reflection-box .recs-meta { margin-bottom: 0.5rem; }
+.reflection-text {
+  width: 100%;
+  background: #051518; border: 1px solid #0e2a2e; border-radius: 10px;
+  color: #99f6e4; font-family: inherit; font-size: 0.8rem; line-height: 1.5;
+  padding: 0.6rem 0.7rem; resize: vertical; outline: none;
+  min-height: 3.6rem;
+}
+.reflection-text:focus { border-color: rgba(45, 212, 191, 0.4); box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.08); }
+.reflection-text::placeholder { color: #3a6a66; }
+.reflection-save {
+  margin-top: 0.45rem;
+  background: rgba(45, 212, 191, 0.1); border: 1px solid rgba(45, 212, 191, 0.25);
+  color: #2dd4bf; border-radius: 8px; padding: 0.4rem 0.8rem;
+  font-size: 0.7rem; font-weight: 600; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.reflection-save:hover  { background: rgba(45, 212, 191, 0.18); }
+.reflection-save:active { transform: scale(0.97); }
+.reflection-save.saved  { background: rgba(74, 222, 128, 0.15); border-color: rgba(74, 222, 128, 0.3); color: #4ade80; }
+.recs-meta { color: #3a6a66; font-size: 0.68rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+.rec-item {
+  background: #061619; border: 1px solid #0e2a2e; border-radius: 14px;
+  padding: 0.95rem; margin-bottom: 0.65rem;
+  position: relative;
+}
+.rec-item.seen-good { border-color: rgba(74, 222, 128, 0.25); background: #061914; }
+.rec-item.seen-bad  { border-color: rgba(239, 68, 68, 0.25);  background: #190a0c; }
+
+.rec-title  { font-size: 0.95rem; font-weight: 600; color: #99f6e4; margin-bottom: 0.15rem; line-height: 1.3; }
+.rec-year   { color: #3a6a66; font-weight: 400; font-size: 0.85rem; margin-left: 0.3rem; }
+.rec-pitch  { font-size: 0.78rem; color: #7aa8a2; line-height: 1.5; margin-top: 0.3rem; }
+.rec-meta   { font-size: 0.68rem; color: #3a6a66; margin-top: 0.5rem; font-family: 'SF Mono', 'Fira Code', monospace; }
+
+.rec-actions { display: flex; gap: 0.4rem; margin-top: 0.7rem; flex-wrap: wrap; }
+.rec-btn {
+  background: #0a1f22; border: 1px solid #0e2a2e; border-radius: 8px;
+  color: #7aa8a2; font-family: inherit; font-size: 0.7rem; font-weight: 600;
+  padding: 0.4rem 0.7rem; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.rec-btn.good:hover  { border-color: rgba(74, 222, 128, 0.4); color: #4ade80; background: rgba(74, 222, 128, 0.08); }
+.rec-btn.bad:hover   { border-color: rgba(239, 68, 68, 0.4); color: #f87171; background: rgba(239, 68, 68, 0.08); }
+.rec-btn.reset:hover { border-color: rgba(156, 163, 175, 0.4); color: #d1d5db; }
+.rec-btn:active { transform: scale(0.97); }
+
+.rec-status {
+  display: inline-block; font-size: 0.62rem; font-weight: 700;
+  padding: 0.15rem 0.45rem; border-radius: 6px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 0.35rem;
+}
+.rec-status.seen-good { background: rgba(74, 222, 128, 0.12); color: #4ade80; }
+.rec-status.seen-bad  { background: rgba(239, 68, 68, 0.12);  color: #f87171; }
+
+/* History tab (recently watched films + thoughts) */
+.watched-item {
+  background: #061619; border: 1px solid #0e2a2e; border-radius: 14px;
+  padding: 0.95rem; margin-bottom: 0.65rem;
+}
+.watched-title { font-size: 0.9rem; font-weight: 600; color: #99f6e4; line-height: 1.3; }
+.watched-year  { color: #3a6a66; font-weight: 400; font-size: 0.8rem; margin-left: 0.3rem; }
+.watched-meta  { font-size: 0.65rem; color: #3a6a66; margin-top: 0.15rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.watched-thoughts-ts { font-size: 0.65rem; color: #3a6a66; margin-top: 0.6rem; font-style: italic; }
+.watched-thoughts {
+  margin-top: 0.5rem;
+  width: 100%;
+  background: #051518; border: 1px solid #0e2a2e; border-radius: 10px;
+  color: #99f6e4; font-family: inherit; font-size: 0.78rem; line-height: 1.5;
+  padding: 0.6rem 0.7rem; resize: vertical; outline: none;
+  min-height: 3rem;
+}
+.watched-thoughts:focus { border-color: rgba(45, 212, 191, 0.4); box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.08); }
+.watched-thoughts::placeholder { color: #3a6a66; }
+.watched-save {
+  margin-top: 0.4rem;
+  background: rgba(45, 212, 191, 0.1); border: 1px solid rgba(45, 212, 191, 0.25);
+  color: #2dd4bf; border-radius: 8px; padding: 0.4rem 0.75rem;
+  font-size: 0.7rem; font-weight: 600; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.watched-save:hover  { background: rgba(45, 212, 191, 0.18); }
+.watched-save:active { transform: scale(0.97); }
+.watched-save.saved  { background: rgba(74, 222, 128, 0.15); border-color: rgba(74, 222, 128, 0.3); color: #4ade80; }
+
+/* Recs-thoughts tab: bot's reflections rendered from its own markdown */
+.rec-thoughts-body { font-size: 0.78rem; color: #7aa8a2; line-height: 1.55; margin-top: 0.4rem; word-break: break-word; }
+.rec-thoughts-body > *:first-child { margin-top: 0; }
+.rec-thoughts-body > *:last-child  { margin-bottom: 0; }
+.rec-thoughts-body p { margin: 0.35rem 0; }
+.rec-thoughts-body h1 { font-size: 0.95rem; color: #2dd4bf; margin: 0 0 0.5rem; font-weight: 700; }
+.rec-thoughts-body h2 { font-size: 0.8rem; color: #2dd4bf; margin: 0.7rem 0 0.25rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.rec-thoughts-body h3 { font-size: 0.78rem; color: #99f6e4; margin: 0.55rem 0 0.2rem; font-weight: 600; }
+.rec-thoughts-body ul, .rec-thoughts-body ol { padding-left: 1.1rem; margin: 0.25rem 0; }
+.rec-thoughts-body li { margin: 0.12rem 0; }
+.rec-thoughts-body li > p { margin: 0; }
+.rec-thoughts-body strong { color: #99f6e4; }
+.rec-thoughts-body em { color: #5a8a84; font-style: italic; }
+.rec-thoughts-body code {
+  background: #051518; padding: 0.08rem 0.28rem; border-radius: 4px;
+  font-size: 0.7rem; font-family: 'SF Mono', 'Fira Code', monospace; color: #99f6e4;
+}
+
+/* Birds scattering upward when you commit something to the matrix */
+@keyframes birdFlight {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.4); }
+  15%  { opacity: 1; transform: translate(calc(var(--tx)*0.2), calc(var(--ty)*0.15)) rotate(calc(var(--rot)*0.2)) scale(1.15); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.6); }
+}

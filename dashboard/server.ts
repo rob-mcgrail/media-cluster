@@ -6,6 +6,7 @@ const DATA_DIR = "/movie-bot-data";
 const PENDING_DIR = `${DATA_DIR}/pending`;
 const COMPLETED_REQUESTS_DIR = `${DATA_DIR}/completed-requests`;
 const COMPLETED_TRIAGE_DIR = `${DATA_DIR}/completed-triage-runs`;
+const COMPLETED_RECS_DIR = `${DATA_DIR}/completed-recs-runs`;
 const RECS_FILE = `${DATA_DIR}/recommendations.jsonl`;
 const THOUGHTS_FILE = `${DATA_DIR}/movie-thoughts.jsonl`;
 const QB_URL = "http://qbittorrent:8080";
@@ -403,13 +404,34 @@ const server = Bun.serve({
       }
     }
 
+    if (req.method === "GET" && url.pathname === "/api/recs-runs") {
+      try {
+        const files = (await readdir(COMPLETED_RECS_DIR))
+          .filter((f) => f.endsWith(".md"))
+          .sort()
+          .reverse()
+          .slice(0, 15);
+        const runs = await Promise.all(
+          files.map(async (f) => ({
+            id: f.replace(/\.md$/, ""),
+            content: await Bun.file(`${COMPLETED_RECS_DIR}/${f}`).text(),
+          })),
+        );
+        return Response.json(runs);
+      } catch {
+        return Response.json([]);
+      }
+    }
+
     if (req.method === "GET" && url.pathname === "/api/recs") {
       try {
         const log = await readJsonl(RECS_FILE);
         const byId = new Map<string, any>();
+        let latestRunId = "";
         for (const e of log) {
           if (e.type === "rec") {
             byId.set(e.id, { ...e, status: "pending" });
+            if (e.runId && e.runId > latestRunId) latestRunId = e.runId;
           } else if (e.type === "status") {
             const r = byId.get(e.recId);
             if (r) {
@@ -419,7 +441,11 @@ const server = Bun.serve({
             }
           }
         }
-        const all = Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        // Pending recs from previous runs are hidden (a fresh run blows them
+        // away). Scored recs persist forever as a record of feedback.
+        const all = Array.from(byId.values())
+          .filter((r) => r.status !== "pending" || r.runId === latestRunId)
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         return Response.json(all);
       } catch {
         return Response.json([]);
