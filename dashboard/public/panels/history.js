@@ -1,6 +1,8 @@
+import { PANELS as DOTS } from '../config.js';
+
 import { esc, renderTriageMd } from '../utils.js';
 
-const DOTS = 6;
+
 
 let root, listEl, filter = 'requests';
 let cachedRequests = null, cachedTriage = null;

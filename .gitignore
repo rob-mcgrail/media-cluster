@@ -18,3 +18,7 @@ movie-bot-data/.*.lock
 
 # Recs
 recs.md
+movie-bot-data/recommendations.jsonl
+movie-bot-data/movie-thoughts.jsonl
+movie-bot-data/completed-recs-runs/*
+!movie-bot-data/completed-recs-runs/.gitkeep

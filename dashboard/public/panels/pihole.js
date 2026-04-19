@@ -1,6 +1,8 @@
+import { PANELS as DOTS } from '../config.js';
+
 import { esc, fmtAgo, fmtLease } from '../utils.js';
 
-const DOTS = 6;
+
 
 let root, listEl;
 
@@ -59,7 +61,7 @@ function mount() {
     </div>
     <div class="panel-inner">
       <div class="critter-zone"><div class="spider critter">🕷️</div></div>
-      <div class="section-title-red">CLIENTS</div>
+      <div class="section-title-red">CLIENTS <span class="section-title-sub">last 24h</span></div>
       <div class="client-list"></div>
       <div class="dots">${dots()}</div>
     </div>

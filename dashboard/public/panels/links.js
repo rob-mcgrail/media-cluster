@@ -1,4 +1,6 @@
-const DOTS = 6;
+import { PANELS as DOTS } from '../config.js';
+
+
 
 const SERVICES = [
   { host: 'jellyfin',                 name: 'Jellyfin',                    desc: 'Media player & library' },

@@ -3,9 +3,10 @@ import mainPanel from './panels/main.js';
 import torrentsPanel from './panels/torrents.js';
 import statusPanel from './panels/status.js';
 import piholePanel from './panels/pihole.js';
+import recsPanel from './panels/recs.js';
 import linksPanel from './panels/links.js';
 
-const panels = [historyPanel, mainPanel, torrentsPanel, statusPanel, piholePanel, linksPanel];
+const panels = [historyPanel, mainPanel, torrentsPanel, statusPanel, piholePanel, recsPanel, linksPanel];
 const PAGES = panels.length;
 
 const viewport = document.getElementById('viewport');
@@ -19,6 +20,24 @@ const allDots = () => viewport.querySelectorAll('.dot');
 const W = () => window.innerWidth;
 let page = 1;
 let startX = 0, startY = 0, startTime = 0, gesture = null, pullPanel = null;
+
+// ---- desktop navigation paddles ----
+const paddlePrev = document.createElement('button');
+paddlePrev.className = 'paddle paddle-prev';
+paddlePrev.setAttribute('aria-label', 'Previous panel');
+paddlePrev.innerHTML = '‹';
+const paddleNext = document.createElement('button');
+paddleNext.className = 'paddle paddle-next';
+paddleNext.setAttribute('aria-label', 'Next panel');
+paddleNext.innerHTML = '›';
+document.body.append(paddlePrev, paddleNext);
+paddlePrev.addEventListener('click', () => snapTo(page - 1));
+paddleNext.addEventListener('click', () => snapTo(page + 1));
+
+function updatePaddles() {
+  paddlePrev.disabled = page <= 0;
+  paddleNext.disabled = page >= PAGES - 1;
+}
 
 function setPos(px, animate) {
   if (animate) {
@@ -39,6 +58,7 @@ function snapTo(p) {
   page = p;
   setPos(-p * W(), true);
   updateDots();
+  updatePaddles();
   const panel = panels[p];
   if (panel && panel.onShow) panel.onShow();
 }
@@ -46,6 +66,7 @@ function snapTo(p) {
 // Initial position + dots
 setPos(-page * W(), false);
 updateDots();
+updatePaddles();
 if (panels[page] && panels[page].onShow) panels[page].onShow();
 
 // Auto-refresh every 15s — only the currently visible panel
@@ -125,3 +146,15 @@ document.addEventListener('touchend', (e) => {
 }, { passive: true });
 
 window.addEventListener('resize', () => setPos(-page * W(), false));
+
+// ---- keyboard navigation (desktop) ----
+// ArrowLeft/ArrowRight navigate panels, unless the user is typing in a field.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const t = e.target;
+  if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  e.preventDefault();
+  if (e.key === 'ArrowLeft')  snapTo(page - 1);
+  if (e.key === 'ArrowRight') snapTo(page + 1);
+});

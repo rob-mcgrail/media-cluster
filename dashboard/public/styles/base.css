@@ -11,7 +11,7 @@ html, body {
 
 .viewport {
   display: flex;
-  width: 600vw;
+  width: 700vw;
   height: 100dvh;
 }
 .viewport.animating {
@@ -34,6 +34,12 @@ html, body {
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
+}
+@media (min-width: 900px) {
+  .panel-inner { max-width: 720px; }
+}
+@media (min-width: 1400px) {
+  .panel-inner { max-width: 860px; }
 }
 .panel.scrollable {
   overflow-y: auto;
@@ -80,4 +86,42 @@ html, body {
   display: inline-block; font-size: 0.65rem; font-weight: 600;
   padding: 0.15rem 0.4rem; border-radius: 6px;
   text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* ---- desktop navigation paddles (hover-capable devices only) ---- */
+.paddle {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px; height: 44px;
+  display: none;
+  align-items: center; justify-content: center;
+  background: rgba(18, 18, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 1.2rem; font-weight: 300;
+  cursor: pointer;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s, opacity 0.2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.paddle:hover {
+  background: rgba(30, 30, 42, 0.8);
+  color: #e5e5e5;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.paddle:active { transform: translateY(-50%) scale(0.94); }
+.paddle:disabled,
+.paddle[disabled] {
+  opacity: 0.2; cursor: default; pointer-events: none;
+}
+.paddle-prev { left: 1.25rem; }
+.paddle-next { right: 1.25rem; }
+
+@media (hover: hover) and (pointer: fine) {
+  .paddle { display: flex; }
 }

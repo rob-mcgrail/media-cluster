@@ -1,4 +1,6 @@
-const DOTS = 6;
+import { PANELS as DOTS } from '../config.js';
+
+
 
 let root, crabZone, crabEl, textarea, btn, statusEl, bubbleInterval;
 

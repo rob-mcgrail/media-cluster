@@ -6,6 +6,8 @@ const DATA_DIR = "/movie-bot-data";
 const PENDING_DIR = `${DATA_DIR}/pending`;
 const COMPLETED_REQUESTS_DIR = `${DATA_DIR}/completed-requests`;
 const COMPLETED_TRIAGE_DIR = `${DATA_DIR}/completed-triage-runs`;
+const RECS_FILE = `${DATA_DIR}/recommendations.jsonl`;
+const THOUGHTS_FILE = `${DATA_DIR}/movie-thoughts.jsonl`;
 const QB_URL = "http://qbittorrent:8080";
 const JELLYFIN_URL = "http://jellyfin:8096";
 const PIHOLE_URL = "http://host.docker.internal:7001";
@@ -13,6 +15,39 @@ const JELLYFIN_API_KEY = process.env.JELLYFIN_API_KEY || "";
 const PIHOLE_PASSWORD = process.env.FTLCONF_webserver_api_password || "";
 
 let piholeSID: string | null = null;
+
+async function readJsonl(path: string): Promise<any[]> {
+  const file = Bun.file(path);
+  if (!(await file.exists())) return [];
+  const text = await file.text();
+  return text.split("\n").filter(Boolean).map((l) => {
+    try { return JSON.parse(l); } catch { return null; }
+  }).filter(Boolean);
+}
+
+async function appendJsonl(path: string, obj: any) {
+  const line = JSON.stringify(obj) + "\n";
+  const file = Bun.file(path);
+  const existing = (await file.exists()) ? await file.text() : "";
+  await Bun.write(path, existing + line);
+}
+
+let jellyfinMeta: { userId: string; filmsLibId: string } | null = null;
+async function getJellyfinMeta() {
+  if (jellyfinMeta) return jellyfinMeta;
+  const users: any = await (
+    await fetch(`${JELLYFIN_URL}/Users`, { headers: { "X-MediaBrowser-Token": JELLYFIN_API_KEY } })
+  ).json();
+  const userId = users?.[0]?.Id;
+  if (!userId) throw new Error("jellyfin: no user");
+  const views: any = await (
+    await fetch(`${JELLYFIN_URL}/Users/${userId}/Views`, { headers: { "X-MediaBrowser-Token": JELLYFIN_API_KEY } })
+  ).json();
+  const filmsLibId = views?.Items?.find((v: any) => v.Name === "Films")?.Id;
+  if (!filmsLibId) throw new Error("jellyfin: 'Films' library not found");
+  jellyfinMeta = { userId, filmsLibId };
+  return jellyfinMeta;
+}
 
 async function piholeAuth() {
   const res = await fetch(`${PIHOLE_URL}/api/auth`, {
@@ -314,10 +349,13 @@ const server = Bun.serve({
 
     if (req.method === "GET" && url.pathname === "/api/pihole-clients") {
       try {
+        // last 24h window (FTL's default in-memory retention is also 24h,
+        // but passing from= makes the scope explicit and future-proof)
+        const from = Math.floor(Date.now() / 1000) - 86400;
         const [permitted, blocked, recent] = await Promise.all([
-          piholeGet("/api/stats/top_clients?blocked=false&count=30"),
-          piholeGet("/api/stats/top_clients?blocked=true&count=30"),
-          piholeGet("/api/queries?length=2000"),
+          piholeGet(`/api/stats/top_clients?blocked=false&count=30&from=${from}`),
+          piholeGet(`/api/stats/top_clients?blocked=true&count=30&from=${from}`),
+          piholeGet(`/api/queries?length=2000&from=${from}`),
         ]);
         const lastSeen = new Map<string, number>();
         for (const q of (recent?.queries || [])) {
@@ -362,6 +400,106 @@ const server = Bun.serve({
         return Response.json(rows);
       } catch {
         return Response.json([]);
+      }
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/recs") {
+      try {
+        const log = await readJsonl(RECS_FILE);
+        const byId = new Map<string, any>();
+        for (const e of log) {
+          if (e.type === "rec") {
+            byId.set(e.id, { ...e, status: "pending" });
+          } else if (e.type === "status") {
+            const r = byId.get(e.recId);
+            if (r) {
+              r.status = e.status;
+              r.statusAt = e.at;
+              r.statusNotes = e.notes || "";
+            }
+          }
+        }
+        const all = Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        return Response.json(all);
+      } catch {
+        return Response.json([]);
+      }
+    }
+
+    {
+      const m = url.pathname.match(/^\/api\/recs\/([^/]+)\/status$/);
+      if (m && req.method === "POST") {
+        try {
+          const body: any = await req.json();
+          if (!["seen-good", "seen-bad", "pending"].includes(body.status)) {
+            return new Response("bad status", { status: 400 });
+          }
+          await appendJsonl(RECS_FILE, {
+            type: "status",
+            recId: m[1],
+            status: body.status,
+            notes: (body.notes || "").toString().slice(0, 2000),
+            at: Math.floor(Date.now() / 1000),
+          });
+          return Response.json({ ok: true });
+        } catch {
+          return new Response("bad request", { status: 400 });
+        }
+      }
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/recently-watched") {
+      try {
+        const { userId, filmsLibId } = await getJellyfinMeta();
+        const jres = await fetch(
+          `${JELLYFIN_URL}/Users/${userId}/Items?ParentId=${filmsLibId}` +
+            `&IncludeItemTypes=Movie&Recursive=true&SortBy=DatePlayed&SortOrder=Descending` +
+            `&Filters=IsPlayed&Limit=30&Fields=UserData,ProductionYear`,
+          { headers: { "X-MediaBrowser-Token": JELLYFIN_API_KEY } },
+        );
+        const jdata: any = await jres.json();
+        const thoughts = await readJsonl(THOUGHTS_FILE);
+        const latestByMovie = new Map<string, any>();
+        for (const t of thoughts) latestByMovie.set(t.movieId, t);
+        const items = (jdata.Items || []).map((it: any) => ({
+          movieId: it.Id,
+          title: it.Name,
+          year: it.ProductionYear || null,
+          watchedAt: it.UserData?.LastPlayedDate || null,
+          thoughts: latestByMovie.get(it.Id)?.thoughts || "",
+          thoughtsAt: latestByMovie.get(it.Id)?.at || null,
+        }));
+        return Response.json(items);
+      } catch {
+        return Response.json([]);
+      }
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/movie-thoughts") {
+      try {
+        const entries = await readJsonl(THOUGHTS_FILE);
+        const latest = new Map<string, any>();
+        for (const e of entries) if (e.movieId) latest.set(e.movieId, e);
+        return Response.json(Array.from(latest.values()));
+      } catch {
+        return Response.json([]);
+      }
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/movie-thoughts") {
+      try {
+        const body: any = await req.json();
+        if (!body.thoughts) return new Response("bad body", { status: 400 });
+        await appendJsonl(THOUGHTS_FILE, {
+          movieId: body.movieId || "",
+          title: body.title || "",
+          year: body.year || null,
+          thoughts: body.thoughts.toString().slice(0, 5000),
+          at: Math.floor(Date.now() / 1000),
+        });
+        return Response.json({ ok: true });
+      } catch {
+        return new Response("bad request", { status: 400 });
       }
     }
 

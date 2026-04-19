@@ -1,6 +1,8 @@
+import { PANELS as DOTS } from '../config.js';
+
 import { esc, fmtBytes, fmtRate, fmtTime, fmtMbps, barClass } from '../utils.js';
 
-const DOTS = 6;
+
 
 let root, statusCardsEl, streamsEl, bugZoneEl;
 let bugs = [];

@@ -127,10 +127,12 @@ Add to your crontab (`crontab -e`):
 ```
 * * * * * /path/to/homelab-cluster/movie-bot-requests/run-prompt.sh
 0 */4 * * * /path/to/homelab-cluster/movie-bot-download-triage/run-triage.sh
+0 6 * * 0 /path/to/homelab-cluster/movie-bot-recommendations/run-recs.sh
 ```
 
 - **`run-prompt.sh`** — every minute, picks up new user prompts from the dashboard queue and runs Claude Code to process them.
 - **`run-triage.sh`** — every 4 hours, reviews the qBittorrent queue and recent user requests: pauses + re-searches early-stalled torrents, parks mostly-done stalls and retries them after 12h, auto-retires torrents stuck for >7 days (removes + blocklists dead release, triggers fresh search), cleans up orphaned `missingFiles` torrents (with a safety cap so a transient mount failure doesn't nuke everything), and priority-boosts fresh small-batch requests. See `movie-bot-download-triage/triage-prompt.txt` for the full decision framework.
+- **`run-recs.sh`** — every Sunday at 06:00 UTC, generates fresh film recommendations based on the user's watch history, saved thoughts, and prior rec ratings (seen-good / seen-bad). Appends recs to `movie-bot-data/recommendations.jsonl` for the dashboard Recs Bot panel to display. See `movie-bot-recommendations/recs-prompt.txt` for the decision framework.
 
 ### 9. Pi-hole (optional but recommended)
 

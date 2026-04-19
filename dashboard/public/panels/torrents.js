@@ -1,6 +1,8 @@
+import { PANELS as DOTS } from '../config.js';
+
 import { esc } from '../utils.js';
 
-const DOTS = 6;
+
 
 let root, listEl, activeFilter = 'downloading', allTorrents = [];
 
