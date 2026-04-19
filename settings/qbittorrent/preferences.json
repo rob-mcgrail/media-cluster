@@ -10,7 +10,7 @@
   "max_inactive_seeding_time_enabled": true,
   "max_inactive_seeding_time": 4320,
   "up_limit": 8704000,
-  "dl_limit": 0,
+  "dl_limit": 3651584,
   "alt_up_limit": 307200,
   "alt_dl_limit": 614400,
   "scheduler_enabled": true,

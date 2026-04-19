@@ -4,13 +4,26 @@ import { esc, fmtAgo, fmtLease } from '../utils.js';
 
 
 
-let root, listEl;
+let root, listEl, titleEl;
+let perClient = null;  // null until /api/config resolves
 
 function dots() {
   return Array.from({ length: DOTS }, (_, i) => `<div class="dot" data-p="${i}"></div>`).join('');
 }
 
-async function refresh() {
+async function loadConfig() {
+  if (perClient !== null) return;
+  try {
+    const res = await fetch('/api/config');
+    const cfg = await res.json();
+    perClient = !!cfg.perClientPiholeView;
+  } catch {
+    perClient = false;
+  }
+  if (titleEl) titleEl.textContent = perClient ? 'CLIENTS' : 'BLOCKS';
+}
+
+async function refreshClients() {
   try {
     const res = await fetch('/api/pihole-clients');
     const items = await res.json();
@@ -48,6 +61,37 @@ async function refresh() {
   }
 }
 
+async function refreshBlocks() {
+  try {
+    const res = await fetch('/api/pihole-top-blocked');
+    const items = await res.json();
+    if (!items.length) {
+      listEl.innerHTML = '<div class="client-empty">No blocks in the last 24h.</div>';
+      return;
+    }
+    const maxCount = Math.max(1, ...items.map(x => x.count));
+    listEl.innerHTML = items.map(d => {
+      const pct = Math.round((d.count / maxCount) * 100);
+      return `
+        <div class="block-card">
+          <div class="block-row">
+            <span class="block-domain">${esc(d.domain)}</span>
+            <span class="block-count">${d.count.toLocaleString()}</span>
+          </div>
+          <div class="block-bar"><div class="block-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+      `;
+    }).join('');
+  } catch {
+    listEl.innerHTML = '<div class="client-empty">Could not load blocks.</div>';
+  }
+}
+
+async function refresh() {
+  await loadConfig();
+  return perClient ? refreshClients() : refreshBlocks();
+}
+
 function mount() {
   root = document.createElement('div');
   root.className = 'panel panel-pihole scrollable';
@@ -61,12 +105,13 @@ function mount() {
     </div>
     <div class="panel-inner">
       <div class="critter-zone"><div class="spider critter">🕷️</div></div>
-      <div class="section-title-red">CLIENTS <span class="section-title-sub">last 24h</span></div>
+      <div class="section-title-red"><span class="pihole-title">BLOCKS</span> <span class="section-title-sub">last 24h</span></div>
       <div class="client-list"></div>
       <div class="dots">${dots()}</div>
     </div>
   `;
   listEl = root.querySelector('.client-list');
+  titleEl = root.querySelector('.pihole-title');
   return root;
 }
 

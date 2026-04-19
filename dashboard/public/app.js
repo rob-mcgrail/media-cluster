@@ -6,7 +6,7 @@ import piholePanel from './panels/pihole.js';
 import recsPanel from './panels/recs.js';
 import linksPanel from './panels/links.js';
 
-const panels = [historyPanel, mainPanel, torrentsPanel, statusPanel, piholePanel, recsPanel, linksPanel];
+const panels = [recsPanel, historyPanel, mainPanel, torrentsPanel, statusPanel, linksPanel, piholePanel];
 const PAGES = panels.length;
 
 const viewport = document.getElementById('viewport');
@@ -18,7 +18,7 @@ const panelEls = panels.map(p => {
 
 const allDots = () => viewport.querySelectorAll('.dot');
 const W = () => window.innerWidth;
-let page = 1;
+let page = 2;
 let startX = 0, startY = 0, startTime = 0, gesture = null, pullPanel = null;
 
 // ---- desktop navigation paddles ----

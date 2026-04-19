@@ -14,6 +14,7 @@ const JELLYFIN_URL = "http://jellyfin:8096";
 const PIHOLE_URL = "http://host.docker.internal:7001";
 const JELLYFIN_API_KEY = process.env.JELLYFIN_API_KEY || "";
 const PIHOLE_PASSWORD = process.env.FTLCONF_webserver_api_password || "";
+const PER_CLIENT_PIHOLE_VIEW = (process.env.PER_CLIENT_PIHOLE_VIEW || "").toLowerCase() === "true";
 
 let piholeSID: string | null = null;
 
@@ -343,6 +344,24 @@ const server = Bun.serve({
             };
           });
         return Response.json(active);
+      } catch {
+        return Response.json([]);
+      }
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/config") {
+      return Response.json({ perClientPiholeView: PER_CLIENT_PIHOLE_VIEW });
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/pihole-top-blocked") {
+      try {
+        const from = Math.floor(Date.now() / 1000) - 86400;
+        const data = await piholeGet(`/api/stats/top_domains?blocked=true&count=20&from=${from}`);
+        const rows = (data?.domains || []).map((d: any) => ({
+          domain: d.domain || "",
+          count: d.count || 0,
+        }));
+        return Response.json(rows);
       } catch {
         return Response.json([]);
       }

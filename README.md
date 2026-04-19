@@ -138,46 +138,43 @@ Add to your crontab (`crontab -e`):
 
 Pi-hole comes up with the rest of the stack and **already blocks ads across any client pointed at it for DNS**. The steps below are to actually route your LAN through it.
 
+**Default topology:** router does DHCP, Pi-hole does DNS. The server itself is on a static IP via netplan so it doesn't depend on DHCP at all — see `docs/orbi-dhcp-mysteries.md` for the rationale.
+
 **Networking model:**
 
-- Runs in `network_mode: host` so DHCP broadcasts (UDP 67) can reach it — bridge mode silently breaks for DHCP.
+- Runs in `network_mode: host` so DHCP broadcasts (UDP 67) can reach it — bridge mode silently breaks for DHCP. (Only relevant if you move DHCP to Pi-hole; see below.)
 - Binds DNS (`:53`) only to specific interface IPs (`${LAN_IP}`, loopback, link-local v6), not `0.0.0.0` — this avoids conflict with Ubuntu's systemd-resolved on `127.0.0.53:53`. Host processes keep using resolved; LAN clients hit Pi-hole.
 - Web UI runs on `:7001` (changed from default `:80` to keep out of Caddy's way); Caddy reverse-proxies to it at `https://pihole.{DOMAIN}/admin/`.
 
-**Configure your router to use Pi-hole as DNS:**
+**Route your LAN through Pi-hole for DNS:**
 
-In your router's admin UI, set **primary DNS to `${LAN_IP}`** (the IP of this box). If your router insists on two DNS entries, **duplicate** the same IP — don't add `1.1.1.1` as secondary, or clients will silently leak past Pi-hole on timeouts.
+In your router's admin UI, set the DHCP-pushed DNS to `${LAN_IP}` (the IP of this box). If your router insists on two DNS entries, **duplicate** the same IP — don't add `1.1.1.1` as secondary, or clients will silently leak past Pi-hole on timeouts.
 
 Devices pick up the new DNS on their next DHCP renewal. Toggle Wi-Fi on a client to force it immediately.
 
 **Android gotcha:** each phone's *Settings → Network & Internet → Private DNS* must be **Off** or **Automatic**. Any other value (dns.google, 1dot1dot1dot1.cloudflare-dns.com) tunnels DNS over TLS past Pi-hole.
 
-**Optionally move DHCP to Pi-hole** for per-device analytics and stable hostnames in the admin UI:
+**Recovery if Pi-hole dies** and DNS goes out for the whole LAN: set your router's DHCP-pushed DNS back to a public resolver (`1.1.1.1`). Takes ~30 seconds, buys time to debug.
+
+#### Optional: move DHCP to Pi-hole
+
+Pi-hole can also serve DHCP. The reason to consider it: Pi-hole can only attribute DNS queries to *hostnames* (rather than just IPs) if it's also issuing the leases. Moving DHCP to Pi-hole gives you per-client labels in the query log and the dashboard's Clients panel.
+
+Trade-offs worth knowing before you switch (detail in `docs/orbi-dhcp-mysteries.md`):
+
+1. **Turn off router DHCP first.** Two DHCP servers on one L2 is a race.
+2. **The server becomes both DHCP server and DHCP client.** If it loses its lease and can't renew (it's asking itself for one), it gets stuck in a chicken-and-egg. The fix is a static IP on `eno1` via netplan — already done in this setup.
+3. **Some devices (e.g. Orbi mesh satellites) reject DHCPACKs whose `server-identifier` isn't the router's IP.** Symptom: device won't come online. Mitigation: force the server-id via `dhcp-option-force=option:server-identifier,<router-ip>` and reserve that device's MAC.
+
+To enable:
 
 1. In Pi-hole admin (`https://pihole.{DOMAIN}/admin/settings/dhcp`), enable DHCP with the same range your router was using (typically `192.168.1.2`–`192.168.1.254`, router/gateway `192.168.1.1`, netmask `255.255.255.0`, lease `24h`).
-2. **Recreate your static leases** in Pi-hole's *Static DHCP leases* section — at minimum for this server itself (so the Cloudflare wildcard target stays stable). You can also set them via CLI:
+2. Recreate any static leases in *Static DHCP leases*. Via CLI:
    ```sh
    docker exec pihole pihole-FTL --config dhcp.hosts '["AA:BB:CC:DD:EE:FF,192.168.1.33,SERVER"]'
    ```
-3. In the router: uncheck **Use Router as DHCP Server**.
+3. In the router: disable its DHCP server.
 4. Toggle Wi-Fi on one device to verify it gets a lease from Pi-hole. If something breaks: re-enable router DHCP and disable Pi-hole DHCP — you're back where you started in under 30 seconds.
-
-Existing devices keep their old leases until they expire (up to 24h) — toggling Wi-Fi on each device forces a faster transition.
-
-**The server itself is both the DHCP server and a DHCP client** (Pi-hole runs here, but the host also needs an IP + DNS from somewhere). That creates a chicken-and-egg at boot: networkd brings up `eno1` and starts DHCP before Docker/Pi-hole is up to answer. Two pieces keep this clean:
-
-1. **Infinite-lease reservation for the server's own MAC** in Pi-hole's static DHCP leases (`HW,IP,HOSTNAME,infinite`). Once the host has received this lease once, networkd caches `LIFETIME=infinite` and uses the IP immediately on every subsequent boot without needing a DHCP exchange — so Pi-hole doesn't have to be up early for the host to get an IP.
-
-2. **systemd-resolved `FallbackDNS`** as a boot-window safety net — drop-in at `/etc/systemd/resolved.conf.d/10-fallback.conf`:
-   ```
-   [Resolve]
-   FallbackDNS=1.1.1.1 1.0.0.1
-   ```
-   `FallbackDNS` only kicks in when the host has no DNS servers configured at all (early boot, before Pi-hole has bound `:53`). Once DHCP populates link DNS with Pi-hole, `FallbackDNS` is ignored — so ad/tracker blocking is fully preserved at steady state. It does *not* fall through on timeouts or NXDOMAIN; blocked domains stay blocked.
-
-One caveat: if Pi-hole crashes mid-session after DHCP has already populated link DNS, the host's DNS goes with it — `FallbackDNS` does not help here because the link DNS list isn't empty, just unresponsive. For that case, restart the Pi-hole container.
-
-**Recovery if Pi-hole dies** and DNS goes out for the whole LAN: set router DNS back to a public resolver (`1.1.1.1`) at the router admin page. Takes ~30 seconds, buys time to debug.
 
 ## Accessing services
 
@@ -199,15 +196,15 @@ Services are also available on their original ports via IP for direct access.
 
 ## Dashboard
 
-The dashboard is a mobile-first web app at `https://www.yourdomain.org` with 7 swipeable panels:
+The dashboard is a mobile-first web app at `https://www.yourdomain.org` with 7 swipeable panels (left → right):
 
-1. **History** (green, fish) — recent Movie Bot prompts and responses
-2. **Movie Bot** (orange, crab) — submit requests to the AI
-3. **Downloads** (blue, octopus) — active torrents with filters
-4. **Server** (purple, bugs) — CPU load, memory, swap, disk usage
-5. **Now Playing** (pink, jellyfish) — active Jellyfin streams with transcoding / source-vs-output detail
-6. **Clients** (red, skulls + bats) — Pi-hole per-client allowed/blocked counts
-7. **Services** (yellow, bees) — quick links to all service dashboards
+1. **Recs** (teal, birds) — weekly AI film recommendations from `run-recs.sh` with thumbs up/down feedback that feeds future rec generations
+2. **History** (green, fish) — recent Movie Bot prompts and responses
+3. **Movie Bot** (orange, crab) — submit requests to the AI
+4. **Downloads** (blue, octopus) — active torrents with filters
+5. **Server** (purple, bugs) — CPU load, memory, swap, disk usage, plus active Jellyfin streams with transcoding / source-vs-output detail
+6. **Services** (yellow, bees) — quick links to all service dashboards
+7. **Blocks / Clients** (red, skulls + bats) — Pi-hole activity. Default is **Blocks**: the top 20 most-blocked domains over the last 24h. Set `PER_CLIENT_PIHOLE_VIEW=true` on the dashboard service to switch to **Clients** (per-client allowed/blocked counts). Per-client only makes sense if Pi-hole can see individual client IPs — i.e. when Pi-hole is also the DHCP server. Under the default topology (router does DHCP, DNS is proxied through a single upstream IP), all queries look like they come from the router, so Blocks is the useful view.
 
 On desktop (900px+), all panels display in a 4-column grid with auto-polling.
 
@@ -224,11 +221,15 @@ docker-compose.yml      # All service definitions
 Caddyfile               # Reverse proxy + HTTPS config
 dashboard/              # Bun web app — the Movie Bot UI
 movie-bot-requests/     # Cron worker that consumes the prompt queue (runs every minute)
-movie-bot-download-triage/ # Cron worker that triages the qBit queue + promotes fresh requests (every 2h)
+movie-bot-download-triage/ # Cron worker that triages the qBit queue + promotes fresh requests (every 4h)
+movie-bot-recommendations/ # Cron worker that generates weekly film recs (Sunday 06:00 UTC)
 movie-bot-data/         # Movie Bot runtime state (gitignored contents)
   pending/              #   inbox: dashboard drops new .txt prompts here; cron consumes
   completed-requests/   #   archive: processed .txt + .out pairs
   completed-triage-runs/#   markdown reports from the triage cron
+  completed-recs-runs/  #   markdown reports from the recs cron
+  recommendations.jsonl #   recs feed consumed by the dashboard Recs panel
+  movie-thoughts.jsonl  #   per-movie user thoughts/ratings feeding future recs
 caddy/                  # Custom Caddy build with Cloudflare DNS plugin
 openresty/              # jellyfin-proxy config (rewrites PlaybackInfo to strip HEVC)
 scripts/                # backup/restore-settings shell scripts

@@ -75,3 +75,23 @@
   box-shadow: 0 0 6px rgba(239, 68, 68, 0.3);
 }
 .client-empty { color: #4a2020; text-align: center; margin-top: 3rem; font-size: 0.9rem; }
+
+.block-card {
+  background: #14080a; border: 1px solid #2a0e0e; border-radius: 14px;
+  padding: 0.7rem 1rem; margin-bottom: 0.45rem;
+}
+.block-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; }
+.block-domain {
+  font-size: 0.85rem; font-weight: 600; color: #fca5a5;
+  overflow-wrap: anywhere; word-break: break-all;
+}
+.block-count { font-size: 0.78rem; font-weight: 600; color: #ef4444; flex-shrink: 0; }
+.block-bar {
+  height: 4px; border-radius: 2px; background: #2a0e0e;
+  margin-top: 0.45rem; overflow: hidden;
+}
+.block-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #b91c1c, #ef4444);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.3);
+}
