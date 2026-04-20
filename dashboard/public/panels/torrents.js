@@ -1,6 +1,6 @@
 import { PANELS as DOTS } from '../config.js';
 
-import { esc } from '../utils.js';
+import { esc, fmtAgo } from '../utils.js';
 
 
 
@@ -12,25 +12,46 @@ function dots() {
 
 function badgeCls(cat) {
   if (cat === 'downloading') return 'badge-dl';
-  if (cat === 'seeding') return 'badge-seed';
-  if (cat === 'queued') return 'badge-stall';
+  if (cat === 'seeding')     return 'badge-seed';
+  if (cat === 'triaged')     return 'badge-triage';
   return 'badge-pause';
 }
 
+function subStatus(t) {
+  // Triage tag wins.
+  if (t.triage && t.triage.status) {
+    const labels = { 'early-stall': 'early-stall', 'parked': 'parked', 'retrying': 'retrying', 'first-parked': 'parked' };
+    return { label: labels[t.triage.status] || t.triage.status, since: t.triage.since };
+  }
+  // Untagged items in the triaged bucket — derive from raw qBit state.
+  const s = t.state || '';
+  if (s === 'queuedDL')                       return { label: 'queued' };
+  if (s === 'stoppedDL' || s === 'pausedDL')  return { label: 'stopped' };
+  if (s === 'stoppedUP' || s === 'pausedUP')  return { label: 'stopped' };
+  if (s === 'error')                          return { label: 'error' };
+  if (s === 'missingFiles')                   return { label: 'missing' };
+  if (s === 'unknown')                        return { label: 'unknown' };
+  return null;
+}
+
 function render() {
-  const filtered = activeFilter === 'all'
-    ? allTorrents
-    : allTorrents.filter(t => t.category === activeFilter);
+  const filtered = allTorrents.filter(t => t.category === activeFilter);
   if (!filtered.length) {
     listEl.innerHTML = `<div class="torrent-empty">${allTorrents.length ? 'None matching filter.' : 'No active torrents.'}</div>`;
     return;
   }
-  listEl.innerHTML = filtered.map(t => `
+  listEl.innerHTML = filtered.map(t => {
+    const sub = t.category === 'triaged' ? subStatus(t) : null;
+    const subBadge = sub
+      ? `<span class="badge badge-triage-sub">${sub.label}${sub.since ? ` · ${fmtAgo(sub.since)}` : ''}</span>`
+      : '';
+    return `
     <div class="torrent-item">
       <div class="torrent-name">${esc(t.name)}</div>
       ${t.sourceFile && t.sourceFile !== t.name ? `<div class="torrent-source">${esc(t.sourceFile)}</div>` : ''}
       <div class="torrent-meta">
         <span class="badge ${badgeCls(t.category)}">${t.category}</span>
+        ${subBadge}
         <span>${t.downloaded} / ${t.size}</span>
         ${t.eta ? `<span>ETA ${t.eta}</span>` : ''}
         ${t.category === 'downloading' ? `<span>${t.dlspeed}</span>` : ''}
@@ -38,7 +59,8 @@ function render() {
       </div>
       <div class="torrent-bar"><div class="torrent-bar-fill" style="width:${t.progress}%"></div></div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 async function refresh() {
@@ -61,10 +83,9 @@ function mount() {
       <div class="critter-zone"><div class="octopus critter">🐙</div></div>
       <div class="section-title-blue">DOWNLOADS</div>
       <div class="torrent-filters">
-        <button class="filter-btn" data-f="all">All</button>
         <button class="filter-btn active" data-f="downloading">Downloading</button>
         <button class="filter-btn" data-f="seeding">Seeding</button>
-        <button class="filter-btn" data-f="queued">Queued</button>
+        <button class="filter-btn" data-f="triaged">Triaged</button>
       </div>
       <div class="torrent-list"></div>
       <div class="dots">${dots()}</div>

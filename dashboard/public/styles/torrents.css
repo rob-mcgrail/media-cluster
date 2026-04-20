@@ -50,7 +50,16 @@
   transition: width 0.5s ease;
 }
 
-.badge-dl    { background: rgba(0, 140, 255, 0.15); color: #00aaff; }
-.badge-seed  { background: rgba(0, 255, 140, 0.12); color: #00ff8a; }
-.badge-stall { background: rgba(255, 180, 0, 0.12); color: #ffaa00; }
-.badge-pause { background: rgba(120, 120, 120, 0.15); color: #888; }
+.badge-dl     { background: rgba(0, 140, 255, 0.15);  color: #00aaff; }
+.badge-seed   { background: rgba(0, 255, 140, 0.12);  color: #00ff8a; }
+.badge-stall  { background: rgba(255, 180, 0, 0.12);  color: #ffaa00; }
+.badge-triage { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+.badge-pause  { background: rgba(120, 120, 120, 0.15); color: #888;    }
+.badge-error  { background: rgba(239, 68, 68, 0.15);  color: #ef4444; }
+
+.badge-triage-sub {
+  background: rgba(168, 85, 247, 0.08);
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  font-size: 0.68rem;
+}

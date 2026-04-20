@@ -114,13 +114,35 @@ function formatBytes(bytes: number): string {
   return (bytes / 1073741824).toFixed(2) + " GB";
 }
 
-function categorise(state: string): string {
-  if (state.includes("download") || state === "forcedDL") return "downloading";
-  if (state.includes("UP") || state === "uploading" || state === "forcedUP" || state === "stalledUP") return "seeding";
-  if (state === "queuedDL" || state === "queuedUP" || state === "checkingDL" || state === "checkingUP" || state === "metaDL" || state === "allocating") return "queued";
-  if (state.includes("paused")) return "paused";
-  if (state === "stalledDL") return "downloading";
-  return "other";
+type TriageStatus = "early-stall" | "parked" | "retrying" | "first-parked" | null;
+
+function triageFromTags(tagsStr: string): { status: TriageStatus; since: number | null } {
+  const byPrefix: Record<string, number | null> = {};
+  for (const raw of (tagsStr || "").split(",")) {
+    const tag = raw.trim();
+    if (!tag.startsWith("triage-")) continue;
+    const [prefix, epochStr] = tag.split(":");
+    const epoch = epochStr ? Number(epochStr) : null;
+    if (!(prefix in byPrefix)) byPrefix[prefix] = isNaN(epoch as number) ? null : epoch;
+  }
+  // priority: active cycle state beats the permanent first-parked marker
+  if ("triage-retry" in byPrefix)        return { status: "retrying",     since: byPrefix["triage-retry"] };
+  if ("triage-paused" in byPrefix)       return { status: "parked",       since: byPrefix["triage-paused"] };
+  if ("triage-early-stall" in byPrefix)  return { status: "early-stall",  since: byPrefix["triage-early-stall"] };
+  if ("triage-first-parked" in byPrefix) return { status: "first-parked", since: byPrefix["triage-first-parked"] };
+  return { status: null, since: null };
+}
+
+function categorise(state: string, triageStatus: TriageStatus): string {
+  if (triageStatus) return "triaged";
+  // Actively attempting a download (even if stuck): qBit has given it a slot.
+  if (state === "downloading" || state === "forcedDL" || state === "stalledDL" || state === "metaDL" || state === "allocating" || state === "checkingDL") return "downloading";
+  // Done / sharing / waiting-to-share.
+  if (state === "uploading" || state === "forcedUP" || state === "stalledUP" || state === "queuedUP" || state === "checkingUP") return "seeding";
+  // Everything else — queuedDL (in qBit queue, never active yet), stopped/paused
+  // without a triage tag, error, missingFiles, unknown. The triage bot should
+  // be looking at any of these.
+  return "triaged";
 }
 
 function formatEta(seconds: number): string {
@@ -203,19 +225,23 @@ const server = Bun.serve({
       try {
         const res = await fetch(`${QB_URL}/api/v2/torrents/info?sort=added_on&reverse=true`);
         const torrents: any[] = await res.json();
-        const mapped = torrents.map((t) => ({
-          name: cleanTitle(t.name),
-          sourceFile: t.content_path ? t.content_path.split("/").pop() : t.name,
-          state: t.state,
-          category: categorise(t.state),
-          progress: Math.round(t.progress * 100),
-          downloaded: formatBytes(t.downloaded),
-          size: formatBytes(t.size),
-          eta: formatEta(t.eta),
-          dlspeed: formatBytes(t.dlspeed) + "/s",
-          upspeed: formatBytes(t.upspeed) + "/s",
-          addedOn: t.added_on,
-        }));
+        const mapped = torrents.map((t) => {
+          const triage = triageFromTags(t.tags || "");
+          return {
+            name: cleanTitle(t.name),
+            sourceFile: t.content_path ? t.content_path.split("/").pop() : t.name,
+            state: t.state,
+            category: categorise(t.state),
+            triage,
+            progress: Math.round(t.progress * 100),
+            downloaded: formatBytes(t.downloaded),
+            size: formatBytes(t.size),
+            eta: formatEta(t.eta),
+            dlspeed: formatBytes(t.dlspeed) + "/s",
+            upspeed: formatBytes(t.upspeed) + "/s",
+            addedOn: t.added_on,
+          };
+        });
         return Response.json(mapped);
       } catch {
         return Response.json([]);
