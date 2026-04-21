@@ -5,8 +5,22 @@ import statusPanel from './panels/status.js';
 import piholePanel from './panels/pihole.js';
 import recsPanel from './panels/recs.js';
 import linksPanel from './panels/links.js';
+import doubleFeaturesPanel from './panels/double-features.js';
+import { setPanels } from './config.js';
 
-const panels = [recsPanel, historyPanel, mainPanel, torrentsPanel, statusPanel, linksPanel, piholePanel];
+// Fetch runtime config before building the panel list so toggleable panels
+// (e.g. Pi-hole) can be included or skipped cleanly.
+let cfg = { piholePanel: 'off' };
+try {
+  cfg = await fetch('/api/config').then(r => r.json());
+} catch { /* use defaults */ }
+
+const basePanels = [doubleFeaturesPanel, recsPanel, historyPanel, mainPanel, torrentsPanel, statusPanel, linksPanel];
+const panels = cfg.piholePanel && cfg.piholePanel !== 'off'
+  ? [...basePanels, piholePanel]
+  : basePanels;
+setPanels(panels.length);
+
 const PAGES = panels.length;
 
 const viewport = document.getElementById('viewport');
@@ -18,7 +32,7 @@ const panelEls = panels.map(p => {
 
 const allDots = () => viewport.querySelectorAll('.dot');
 const W = () => window.innerWidth;
-let page = 2;
+let page = 3;
 let startX = 0, startY = 0, startTime = 0, gesture = null, pullPanel = null;
 
 // ---- desktop navigation paddles ----

@@ -16,7 +16,7 @@ async function loadConfig() {
   try {
     const res = await fetch('/api/config');
     const cfg = await res.json();
-    perClient = !!cfg.perClientPiholeView;
+    perClient = cfg.piholePanel === 'clients';
   } catch {
     perClient = false;
   }

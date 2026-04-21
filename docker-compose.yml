@@ -137,12 +137,12 @@ services:
     env_file:
       - .api_keys
     environment:
-      # Pi-hole panel mode. false = "Blocks" (top blocked domains, works even when
-      # queries can't be attributed per-client — e.g. router does DHCP and proxies
-      # all DNS through itself). true = "Clients" (per-client allowed/blocked
-      # counts, only useful when Pi-hole can see individual client IPs, e.g.
-      # when Pi-hole itself is the DHCP server).
-      - PER_CLIENT_PIHOLE_VIEW=false
+      # Pi-hole panel mode. Options:
+      #   off     — panel hidden entirely (default — we've found it uninteresting)
+      #   blocks  — top 20 blocked domains in the last 24h
+      #   clients — per-client allowed/blocked counts (only useful when Pi-hole
+      #             is also the DHCP server, so it can see individual client IPs)
+      - PIHOLE_PANEL=off
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

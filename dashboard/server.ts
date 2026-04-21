@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, rename } from "node:fs/promises";
 import { loadavg, totalmem, freemem, cpus } from "node:os";
 import { statfsSync } from "node:fs";
 
@@ -9,12 +9,16 @@ const COMPLETED_TRIAGE_DIR = `${DATA_DIR}/completed-triage-runs`;
 const COMPLETED_RECS_DIR = `${DATA_DIR}/completed-recs-runs`;
 const RECS_FILE = `${DATA_DIR}/recommendations.jsonl`;
 const THOUGHTS_FILE = `${DATA_DIR}/movie-thoughts.jsonl`;
+const DOUBLE_FEATURES_DIR = `${DATA_DIR}/double-features`;
+const DISMISSED_DOUBLE_FEATURES_DIR = `${DATA_DIR}/dismissed-double-features`;
 const QB_URL = "http://qbittorrent:8080";
 const JELLYFIN_URL = "http://jellyfin:8096";
 const PIHOLE_URL = "http://host.docker.internal:7001";
 const JELLYFIN_API_KEY = process.env.JELLYFIN_API_KEY || "";
 const PIHOLE_PASSWORD = process.env.FTLCONF_webserver_api_password || "";
-const PER_CLIENT_PIHOLE_VIEW = (process.env.PER_CLIENT_PIHOLE_VIEW || "").toLowerCase() === "true";
+const PIHOLE_PANEL_RAW = (process.env.PIHOLE_PANEL || "off").toLowerCase();
+const PIHOLE_PANEL: "off" | "blocks" | "clients" =
+  PIHOLE_PANEL_RAW === "blocks" || PIHOLE_PANEL_RAW === "clients" ? PIHOLE_PANEL_RAW : "off";
 
 let piholeSID: string | null = null;
 
@@ -32,6 +36,26 @@ async function appendJsonl(path: string, obj: any) {
   const file = Bun.file(path);
   const existing = (await file.exists()) ? await file.text() : "";
   await Bun.write(path, existing + line);
+}
+
+function parseDoubleFeature(content: string, filename: string) {
+  const m = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n+([\s\S]*)$/);
+  if (!m) return null;
+  const fm: Record<string, string> = {};
+  for (const line of m[1].split("\n")) {
+    const kv = line.match(/^(\w+):\s*(.*)$/);
+    if (kv) fm[kv[1]] = kv[2].trim();
+  }
+  return {
+    id: fm.id || filename.replace(/\.md$/, ""),
+    filmA: fm.filmA || "",
+    filmB: fm.filmB || "",
+    filmAId: fm.filmAId || null,
+    filmBId: fm.filmBId || null,
+    createdAt: fm.createdAt || null,
+    runId: fm.runId || "",
+    reason: m[2].trim(),
+  };
 }
 
 let jellyfinMeta: { userId: string; filmsLibId: string } | null = null;
@@ -376,7 +400,7 @@ const server = Bun.serve({
     }
 
     if (req.method === "GET" && url.pathname === "/api/config") {
-      return Response.json({ perClientPiholeView: PER_CLIENT_PIHOLE_VIEW });
+      return Response.json({ piholePanel: PIHOLE_PANEL });
     }
 
     if (req.method === "GET" && url.pathname === "/api/pihole-top-blocked") {
@@ -446,6 +470,47 @@ const server = Bun.serve({
         return Response.json(rows);
       } catch {
         return Response.json([]);
+      }
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/double-features") {
+      try {
+        const files = (await readdir(DOUBLE_FEATURES_DIR))
+          .filter((f) => f.endsWith(".md"))
+          .sort();
+        const items: any[] = [];
+        for (const f of files) {
+          const content = await Bun.file(`${DOUBLE_FEATURES_DIR}/${f}`).text();
+          const parsed = parseDoubleFeature(content, f);
+          if (parsed) items.push(parsed);
+        }
+        // Newest first by createdAt (string ISO sorts lexically)
+        items.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+        return Response.json(items);
+      } catch {
+        return Response.json([]);
+      }
+    }
+
+    {
+      const m = url.pathname.match(/^\/api\/double-features\/([^/]+)\/dismiss$/);
+      if (m && req.method === "POST") {
+        const id = m[1];
+        // Slug whitelist — prevent path traversal via ../ or absolute paths
+        if (!/^[a-zA-Z0-9-]+$/.test(id)) {
+          return new Response("bad id", { status: 400 });
+        }
+        const src = `${DOUBLE_FEATURES_DIR}/${id}.md`;
+        const dst = `${DISMISSED_DOUBLE_FEATURES_DIR}/${id}.md`;
+        if (!(await Bun.file(src).exists())) {
+          return new Response("not found", { status: 404 });
+        }
+        try {
+          await rename(src, dst);
+          return Response.json({ ok: true });
+        } catch {
+          return new Response("dismiss failed", { status: 500 });
+        }
       }
     }
 
