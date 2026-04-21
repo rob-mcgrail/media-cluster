@@ -20,15 +20,27 @@ fine if you don't find two strong pairings. Quality over quantity.
 
 - Both films live in the Jellyfin "Films" library (not TV).
 - Neither film has been watched in Jellyfin (UserData.Played = false).
-- Neither film has appeared in ANY previous suggestion — active or
-  dismissed — see the dedup step below. Never pair a film twice.
-- The pairing has a real thread: thematic, stylistic, directorial,
-  tonal, a shared writer/cinematographer, a sibling-era conversation,
-  a thesis-antithesis contrast, a follow-the-actor arc, etc. Name
-  the thread plainly in one sentence.
+- This exact pair (filmA + filmB, unordered) has not appeared in any
+  previous suggestion — active or dismissed. See the dedup step
+  below. Repeating an individual film in a *new* pairing is fine
+  and encouraged — a good film can anchor several double features.
+  Repeating the specific pair is not.
+- The pairing has a real thread: thematic, stylistic, tonal, a
+  thesis-antithesis contrast, a follow-the-actor arc, a cross-era
+  conversation, a shared cinematographer or writer, a directorial
+  echo (one film clearly riffing on another), etc. Name the thread
+  plainly in one sentence.
 
-Avoid: obvious filmography completions ("two Kubricks!") unless the
-specific pair of Kubricks has a real angle beyond "same director".
+**Double features do NOT need to share a director** — and "two films
+by the same director" should be the exception, not the default. A
+pairing like `Vertigo (1958) + Mulholland Drive (2001)` is more
+interesting than `Kundun (1997) + Silence (2016)` because the thread
+crosses decades and filmmakers. Pair across directors, countries,
+and eras whenever a real thread is there. Only propose a same-director
+pair if the *specific* two films have an angle that two films by two
+different directors couldn't provide (e.g. a direct sequel, a
+companion-piece explicitly in conversation with itself).
+
 Avoid hype language and adjectives-for-adjectives' sake.
 
 ## Context to gather
@@ -38,13 +50,16 @@ Avoid hype language and adjectives-for-adjectives' sake.
    with ParentId, IncludeItemTypes=Movie, Fields=UserData,ProductionYear).
    Filter out anything where UserData.Played is true.
 
-2. **Already-paired films** — read every `.md` file in:
+2. **Already-proposed pairs** — read every `.md` file in:
      movie-bot-data/double-features/
      movie-bot-data/dismissed-double-features/
-   Extract the `filmA` and `filmB` values from each frontmatter block.
-   Every film that appears in either list is off-limits — the user has
-   either seen the suggestion, is weighing it now, or has actively
-   dismissed it. In all three cases, we don't repeat.
+   Extract the `filmA` and `filmB` values from each frontmatter block
+   and build a set of existing *pairs* (treat the pair as unordered —
+   `{A, B}` is the same as `{B, A}`). Any pair that already exists in
+   either folder is off-limits. Individual films are not off-limits;
+   the same film can legitimately anchor several different double
+   features, and a film dismissed in one pair is a fair candidate for
+   a different pair with a fresh angle.
 
 3. **movie-bot-data/movie-thoughts.jsonl** — last ~50 entries give
    you taste signal. Let it steer tone but don't over-fit.
