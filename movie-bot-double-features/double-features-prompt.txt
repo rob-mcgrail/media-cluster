@@ -131,9 +131,9 @@ Otherwise:
 
 ## Hard limits
 
-- Never pair a film that appears in any existing file under
-  double-features/ or dismissed-double-features/. Dedup is
-  non-negotiable.
+- Never propose a pair (unordered) that already exists in
+  double-features/ or dismissed-double-features/. Pair-level dedup
+  is non-negotiable. Film-level reuse across different pairs is fine.
 - Never recommend a film with UserData.Played=true.
 - Never add more than 2 suggestions in a single run.
 - Never touch files outside movie-bot-data/double-features/ or the
