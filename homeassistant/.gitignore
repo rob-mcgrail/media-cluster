@@ -1,0 +1,13 @@
+# Ignore everything in this directory by default — HA writes a LOT of
+# runtime state here (database, .storage, logs, secrets) and we don't
+# want any of it in git.
+*
+
+# Whitelist what we DO want tracked: hand-edited config YAMLs + docs +
+# this gitignore itself.
+!.gitignore
+!configuration.yaml
+!automations.yaml
+!scripts.yaml
+!scenes.yaml
+!NOTES.md

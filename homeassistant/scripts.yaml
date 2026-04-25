@@ -1,0 +1,19 @@
+panic_floodlights_and_sirens:
+  alias: "Panic: floodlights + sirens"
+  icon: mdi:alarm-light
+  description: >-
+    Both floodlights on AND both sirens going. Manual call only —
+    invoke via dashboard button, mobile companion app widget, or:
+      POST /api/services/script/panic_floodlights_and_sirens
+  mode: single
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.front_door_floodlight_cam_floodlight
+          - light.deck_floodlight_cam_floodlight
+    - service: siren.turn_on
+      target:
+        entity_id:
+          - siren.front_door_floodlight_cam_siren
+          - siren.deck_floodlight_cam_siren

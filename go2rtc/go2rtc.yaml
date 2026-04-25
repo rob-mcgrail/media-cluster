@@ -1,0 +1,32 @@
+# go2rtc: RTSP-to-browser proxy for the Reolink floodlight cams.
+#
+# Each stream is the camera's main (HD, ~1920×1080, ~15-30 FPS) channel.
+# go2rtc transcodes/repacks on demand and exposes:
+#   MJPEG :        http://go2rtc:1984/api/stream.mjpeg?src=<name>
+#   WebRTC HTML:   http://go2rtc:1984/stream.html?src=<name>
+#   Snapshot JPEG: http://go2rtc:1984/api/frame.jpeg?src=<name>
+#
+# Credentials come from .api_keys via env_file in docker-compose.yml.
+streams:
+  # Reolink F-series streams the main channel as H.265 — browsers and
+  # the MJPEG converter can't consume it directly. Each stream has two
+  # entries: the raw RTSP H.265 source, and an ffmpeg variant that
+  # transcodes to MJPEG for <img> consumption. go2rtc routes consumers
+  # to whichever variant matches their codec request.
+  front_door:
+    - rtsp://admin:${REOLINK_FRONT_DOOR_PASSWORD}@192.168.1.3:554/h265Preview_01_main
+    - ffmpeg:front_door#video=mjpeg
+  deck:
+    - rtsp://admin:${REOLINK_DECK_PASSWORD}@192.168.1.8:554/h265Preview_01_main
+    - ffmpeg:deck#video=mjpeg
+
+  # The cameras' sub channel is H.264 panoramic 1920×576 — same source
+  # HA's "fluent" entity uses. Kept around as a low-CPU fallback.
+  front_door_sub: rtsp://admin:${REOLINK_FRONT_DOOR_PASSWORD}@192.168.1.3:554/h264Preview_01_sub
+  deck_sub:       rtsp://admin:${REOLINK_DECK_PASSWORD}@192.168.1.8:554/h264Preview_01_sub
+
+api:
+  origin: '*'   # CORS open — only reachable via the docker network anyway
+
+log:
+  level: info

@@ -1,0 +1,289 @@
+.panel-floodlights { background: #0e0707; }
+
+.fox {
+  position: absolute; top: 18px; font-size: 3rem;
+  animation: foxProwl 12s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px rgba(251, 113, 133, 0.5));
+}
+@keyframes foxProwl {
+  0%   { left: 8%;                    transform: translateY(0)    rotate(0deg); }
+  20%  {                                transform: translateY(-4px) rotate(-3deg); }
+  40%  { left: 60%;                    transform: translateY(0)    rotate(2deg); }
+  55%  { left: 60%;                    transform: translateY(-3px) rotate(-2deg); }
+  70%  { left: calc(100% - 4rem);      transform: translateY(0)    rotate(3deg); }
+  100% { left: 8%;                    transform: translateY(0)    rotate(0deg); }
+}
+
+.section-title-coral {
+  font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;
+  color: #fb7185; margin-bottom: 1rem;
+  text-shadow: 0 0 10px rgba(251, 113, 133, 0.35);
+}
+
+.fl-empty {
+  color: #6a3a3f; text-align: center; margin-top: 3rem;
+  font-size: 0.9rem; line-height: 1.6; padding: 0 1.5rem;
+}
+.fl-hint {
+  margin-top: 0.75rem; font-size: 0.75rem; color: #5a3034;
+}
+.fl-hint code {
+  background: #1a0f10; padding: 0.1rem 0.35rem; border-radius: 4px;
+  font-family: 'SF Mono', 'Fira Code', monospace; color: #d97c84;
+}
+
+.fl-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #170c0e; border: 1px solid #3a1820; border-radius: 14px;
+  padding: 1rem 1.2rem; margin-bottom: 0.75rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.fl-row.on {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.04), #170c0e 70%);
+}
+/* "All" row gets a slightly heavier hand to mark it as the master control. */
+.fl-row-all {
+  border-width: 2px;
+  margin-bottom: 1.1rem;
+}
+.fl-row-all .fl-name {
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fl-name {
+  font-size: 1rem; font-weight: 600; color: #fda4af;
+}
+.fl-row.on .fl-name { color: #fbbf24; }
+
+.fl-toggle {
+  font: inherit; font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 0.06em;
+  background: rgba(251, 113, 133, 0.1);
+  border: 1px solid rgba(251, 113, 133, 0.3);
+  color: #fb7185;
+  padding: 0.55rem 0.85rem; border-radius: 999px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 0.45rem;
+  min-width: 5rem; justify-content: center;
+  transition: all 0.2s ease;
+}
+.fl-toggle.on {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.25);
+}
+.fl-toggle[disabled] { opacity: 0.5; cursor: default; }
+
+.fl-indicator {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #4a2025;
+}
+.fl-toggle.on .fl-indicator {
+  background: #fbbf24;
+  box-shadow: 0 0 8px #fbbf24;
+}
+
+/* Camera tile grid — two snapshots side-by-side, each links through to
+   the HA Floodlights dashboard for a bigger view. */
+.fl-cams {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.fl-cam {
+  position: relative;
+  display: block;
+  border: 1px solid #3a1820;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0a0506;
+  text-decoration: none;
+  /* Reolink floodlight cam streams a 1920×576 panoramic frame; matching
+     the aspect-ratio means no crop and no letterbox. */
+  aspect-ratio: 10 / 3;
+  transition: border-color 0.2s ease;
+}
+.fl-cam:hover { border-color: rgba(251, 191, 36, 0.5); }
+.fl-cam-snap {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.fl-cam-name {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.75rem; font-weight: 600;
+  color: #fda4af;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.7));
+  letter-spacing: 0.04em;
+}
+
+/* Panic button — separated from the cameras to avoid mis-taps, requires
+   a confirmation tap before actually firing. */
+.fl-panic {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.2rem;
+  width: 100%;
+  margin-top: 2rem;
+  padding: 1.1rem 1rem;
+  font: inherit; font-weight: 800; letter-spacing: 0.08em;
+  border: 2px solid rgba(239, 68, 68, 0.45);
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.fl-panic-label { font-size: 1.05rem; }
+.fl-panic-hint  { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.04em; opacity: 0.7; text-transform: none; }
+
+.fl-panic[data-state="confirm"] {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fecaca;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.5);
+  animation: panicPulse 0.9s ease-in-out infinite alternate;
+}
+.fl-panic[data-state="firing"] {
+  background: rgba(239, 68, 68, 0.45);
+  border-color: #fecaca;
+  color: #fff;
+}
+.fl-panic[data-state="fired"] {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: #22c55e;
+  color: #bbf7d0;
+}
+.fl-panic[data-state="failed"] {
+  background: rgba(120, 120, 120, 0.18);
+  border-color: rgba(120, 120, 120, 0.45);
+  color: #d1d5db;
+}
+@keyframes panicPulse {
+  from { box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
+  to   { box-shadow: 0 0 32px rgba(239, 68, 68, 0.7); }
+}
+
+/* Fullscreen camera modal — opens on tile tap, closes on tap-anywhere
+   or Esc. Tries native fullscreen + screen.orientation.lock('landscape')
+   first; the CSS-rotation fallback covers iOS Safari which doesn't
+   support orientation lock from web. */
+.fl-cam-modal {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.fl-cam-modal-img {
+  max-width: 100%; max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+/* Portrait fallback: rotate the image 90deg so the panoramic frame
+   fills the long axis of the phone, even if orientation lock failed. */
+@media (orientation: portrait) {
+  .fl-cam-modal-img {
+    transform: rotate(90deg);
+    /* After rotation, max bounds swap. */
+    max-width: 100vh;
+    max-height: 100vw;
+  }
+}
+.fl-cam-modal-name {
+  position: absolute; top: 1rem; left: 1rem;
+  color: #fda4af;
+  font-size: 0.85rem; font-weight: 600;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 2px #000;
+}
+.fl-cam-modal-close {
+  position: absolute; top: 0.6rem; right: 0.7rem;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 1.5rem; line-height: 1;
+  width: 2.4rem; height: 2.4rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Recent clips list — paired events (one row per detection burst that
+   may include both cams). Tap a row to open the playback modal with
+   both videos side-by-side. */
+.fl-clips {
+  margin-top: 1.5rem;
+}
+.fl-clips-title {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
+  color: #fb7185; margin-bottom: 0.5rem;
+}
+.fl-clip-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 0.55rem 0.85rem;
+  background: #170c0e; border: 1px solid #3a1820; border-radius: 10px;
+  margin-bottom: 0.4rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.fl-clip-row:hover {
+  border-color: rgba(251, 113, 133, 0.5);
+  background: #1c0e10;
+}
+.fl-clip-cams {
+  font-size: 0.85rem; font-weight: 600; color: #fda4af;
+}
+.fl-clip-time {
+  font-size: 0.72rem; color: #6a3a3f;
+}
+
+/* Clip playback modal — two <video> elements side-by-side on landscape
+   (two videos of the same panoramic event, one per camera), stacked
+   on portrait. */
+.fl-clip-modal {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem 1rem 1rem;
+}
+.fl-clip-grid {
+  display: grid;
+  width: 100%; height: 100%;
+  gap: 0.5rem;
+  grid-template-columns: 1fr 1fr;   /* side-by-side default */
+}
+.fl-clip-grid:has(.fl-clip-video-wrap:only-child) {
+  grid-template-columns: 1fr;       /* single clip event */
+}
+@media (orientation: portrait) {
+  .fl-clip-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+}
+.fl-clip-video-wrap {
+  position: relative;
+  display: flex; flex-direction: column;
+  min-height: 0; /* let video shrink in grid */
+}
+.fl-clip-video-label {
+  position: absolute; top: 0.4rem; left: 0.6rem;
+  z-index: 1;
+  color: #fda4af;
+  font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px #000;
+}
+.fl-clip-video {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  background: #000;
+}

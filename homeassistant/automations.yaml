@@ -1,0 +1,135 @@
+- id: record_front_door_clip
+  alias: "Record HD clip — front door"
+  description: >-
+    On a person or vehicle alert, fire a 60s ffmpeg record from the
+    front door cam's go2rtc RTSP feed. mode:single + a 45s delay
+    after the record action means while one recording is in flight,
+    additional triggers within the next 45s are dropped — at most
+    one clip per cam per detection burst (with intentional overlap
+    allowed if a fresh event arrives after the 45s lock but before
+    the 60s ffmpeg finishes).
+  mode: single
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.front_door_floodlight_cam_person
+        - binary_sensor.front_door_floodlight_cam_vehicle
+      to: "on"
+  action:
+    - service: shell_command.record_front_door
+    # Hold the automation "running" so any further triggers in this
+    # window are dropped (shell_command itself returns immediately;
+    # ffmpeg runs in background regardless).
+    - delay: "00:00:45"
+
+- id: record_deck_clip
+  alias: "Record HD clip — deck"
+  description: >-
+    Same pattern as front_door — 60s clip + mode:single 45s lock.
+  mode: single
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.deck_floodlight_cam_person
+        - binary_sensor.deck_floodlight_cam_vehicle
+      to: "on"
+  action:
+    - service: shell_command.record_deck
+    - delay: "00:00:45"
+
+- id: bootstrap_floodlights_auto
+  alias: "Bootstrap: default floodlights_auto to on"
+  description: >-
+    First-boot helper. Turns the auto toggle on iff it's still in its
+    "never been set" state. After it's been set once (by user or this
+    automation), this never fires again because the toggle is on/off,
+    not unknown.
+  mode: single
+  trigger:
+    - platform: homeassistant
+      event: start
+  condition:
+    - condition: state
+      entity_id: input_boolean.floodlights_auto
+      state: unknown
+  action:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.floodlights_auto
+
+- id: floodlights_on_when_either_cam_detects
+  alias: "Floodlights: turn on when either cam detects person/vehicle"
+  description: >-
+    Either Reolink cam sees a human or vehicle → both floodlights on.
+    Skipped during daylight and when the auto toggle is off.
+  mode: single
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.front_door_floodlight_cam_person
+        - binary_sensor.front_door_floodlight_cam_vehicle
+        - binary_sensor.deck_floodlight_cam_person
+        - binary_sensor.deck_floodlight_cam_vehicle
+      to: "on"
+  condition:
+    # Only fire after sundown — daylight floodlights are wasted electricity.
+    - condition: state
+      entity_id: sun.sun
+      state: below_horizon
+    # And only when the user hasn't disabled the whole thing.
+    - condition: state
+      entity_id: input_boolean.floodlights_auto
+      state: "on"
+  action:
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.front_door_floodlight_cam_floodlight
+          - light.deck_floodlight_cam_floodlight
+
+- id: floodlights_off_after_quiet_period
+  alias: "Floodlights: turn off after 2 min of no detection"
+  description: >-
+    Both floodlights off once ALL detection sensors have been off for 2
+    minutes uninterrupted. Any new alert from either camera resets the
+    timer (so successive detections extend the window). Gated on the
+    auto toggle — if you disable auto mid-event, the lights stay on for
+    you to control manually.
+  mode: single
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.front_door_floodlight_cam_person
+        - binary_sensor.front_door_floodlight_cam_vehicle
+        - binary_sensor.deck_floodlight_cam_person
+        - binary_sensor.deck_floodlight_cam_vehicle
+      to: "off"
+      for:
+        minutes: 2
+  condition:
+    # Only fire when ALL four sensors are currently off — otherwise a
+    # quiet 2 minutes on Front while Deck is still seeing someone would
+    # kill the lights mid-event.
+    - condition: state
+      entity_id: binary_sensor.front_door_floodlight_cam_person
+      state: "off"
+    - condition: state
+      entity_id: binary_sensor.front_door_floodlight_cam_vehicle
+      state: "off"
+    - condition: state
+      entity_id: binary_sensor.deck_floodlight_cam_person
+      state: "off"
+    - condition: state
+      entity_id: binary_sensor.deck_floodlight_cam_vehicle
+      state: "off"
+    # If the user turned the auto toggle off, leave the lights as they
+    # are — they probably wanted manual control.
+    - condition: state
+      entity_id: input_boolean.floodlights_auto
+      state: "on"
+  action:
+    - service: light.turn_off
+      target:
+        entity_id:
+          - light.front_door_floodlight_cam_floodlight
+          - light.deck_floodlight_cam_floodlight

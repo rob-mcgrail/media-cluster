@@ -1,0 +1,74 @@
+# Home Assistant configuration.
+#
+# default_config: pulls in the standard HA bundle (frontend, history,
+# automations, etc.) so you don't have to enable each piece manually.
+default_config:
+
+# Reverse-proxy support — Caddy lives on the docker bridge network
+# (172.20.0.0/16), so trust X-Forwarded-* from there.
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.20.0.0/16
+
+# Helpers (toggles, timers, etc.) defined here so they live in the
+# repo rather than HA's .storage/.
+input_boolean:
+  floodlights_auto:
+    name: "Auto-floodlights enabled"
+    icon: mdi:lightbulb-auto
+
+# Light groups — a single entity that controls multiple physical lights.
+# Toggle light.all_floodlights to fire (or kill) both cams' floodlights
+# in sync; the group's state reflects whether ANY member is on.
+light:
+  - platform: group
+    name: All Floodlights
+    entities:
+      - light.front_door_floodlight_cam_floodlight
+      - light.deck_floodlight_cam_floodlight
+
+# Extra dashboard for floodlight + siren controls. The default
+# "Overview" dashboard stays UI-editable; this one is YAML so it lives
+# in the repo and survives HA reinstalls.
+lovelace:
+  dashboards:
+    lovelace-floodlights:
+      mode: yaml
+      filename: floodlights-dashboard.yaml
+      title: Floodlights
+      icon: mdi:lightbulb-multiple
+      show_in_sidebar: true
+      require_admin: false
+
+# 60-second HD clip recorders. Pulls from go2rtc's RTSP server (the
+# H.265 main stream from the camera) and transcodes to H.264 1920p so
+# the clips play in any browser via HA's media browser. -preset
+# ultrafast keeps the CPU cost short — only spikes during the 30s of
+# an active recording, idle the rest of the time.
+shell_command:
+  record_front_door: >-
+    ffmpeg -y -loglevel error -rtsp_transport tcp
+    -i rtsp://go2rtc:8554/front_door
+    -t 60
+    -vf scale=1920:-2
+    -c:v libx264 -preset ultrafast -crf 26 -pix_fmt yuv420p
+    -c:a aac -b:a 96k
+    -movflags +faststart
+    -f mp4
+    /media/cam-recordings/front_door/{{ now().strftime('%Y%m%dT%H%M%SZ') }}.mp4
+  record_deck: >-
+    ffmpeg -y -loglevel error -rtsp_transport tcp
+    -i rtsp://go2rtc:8554/deck
+    -t 60
+    -vf scale=1920:-2
+    -c:v libx264 -preset ultrafast -crf 26 -pix_fmt yuv420p
+    -c:a aac -b:a 96k
+    -movflags +faststart
+    -f mp4
+    /media/cam-recordings/deck/{{ now().strftime('%Y%m%dT%H%M%SZ') }}.mp4
+
+# Split-out files for things you'll edit a lot.
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
