@@ -2,7 +2,7 @@
 
 Docker Compose stack for a home media server with a mobile-first dashboard and an AI-powered movie bot.
 
-**Services:** Jellyfin, Sonarr, Radarr, Prowlarr, qBittorrent, Bazarr, Navidrome (music streaming), Pi-hole (network-wide DNS + ad-blocking + optional DHCP), Caddy (reverse proxy), jellyfin-proxy (HEVC force-transcode shim), Dashboard (Movie Bot)
+**Services:** Jellyfin, Sonarr, Radarr, Prowlarr, qBittorrent, Bazarr, Navidrome (music streaming), Home Assistant (Reolink cameras + floodlight automation), Pi-hole (network-wide DNS + ad-blocking + optional DHCP), Caddy (reverse proxy), jellyfin-proxy (HEVC force-transcode shim), Dashboard (Movie Bot)
 
 ## What it does
 
@@ -197,6 +197,7 @@ All services are available via HTTPS at `<service>.yourdomain.org`:
 | qBittorrent | `https://qbittorrent.yourdomain.org` |
 | Bazarr | `https://bazarr.yourdomain.org` |
 | Navidrome | `https://navidrome.yourdomain.org` |
+| Home Assistant | `https://ha.yourdomain.org` |
 | Pi-hole | `https://pihole.yourdomain.org/admin` |
 
 Services are also available on their original ports via IP for direct access.

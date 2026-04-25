@@ -35,6 +35,10 @@ navidrome.{$DOMAIN} {
 	reverse_proxy navidrome:4533
 }
 
+ha.{$DOMAIN} {
+	reverse_proxy homeassistant:8123
+}
+
 www.{$DOMAIN} {
 	reverse_proxy dashboard:8000
 }

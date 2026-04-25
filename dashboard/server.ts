@@ -1,4 +1,4 @@
-import { readdir, readFile, rename } from "node:fs/promises";
+import { readdir, readFile, rename, stat } from "node:fs/promises";
 import { loadavg, totalmem, freemem, cpus } from "node:os";
 import { statfsSync } from "node:fs";
 
@@ -19,6 +19,25 @@ const PIHOLE_PASSWORD = process.env.FTLCONF_webserver_api_password || "";
 const PIHOLE_PANEL_RAW = (process.env.PIHOLE_PANEL || "off").toLowerCase();
 const PIHOLE_PANEL: "off" | "blocks" | "clients" =
   PIHOLE_PANEL_RAW === "blocks" || PIHOLE_PANEL_RAW === "clients" ? PIHOLE_PANEL_RAW : "off";
+const HASS_URL = process.env.HASS_URL || "http://homeassistant:8123";
+const HASS_TOKEN = process.env.HASS_TOKEN || "";
+
+const FLOODLIGHT_ENTITIES = [
+  "light.all_floodlights",
+  "light.front_door_floodlight_cam_floodlight",
+  "light.deck_floodlight_cam_floodlight",
+];
+
+async function hassFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(`${HASS_URL}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${HASS_TOKEN}`,
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    },
+  });
+}
 
 let piholeSID: string | null = null;
 
@@ -410,6 +429,135 @@ const server = Bun.serve({
 
     if (req.method === "GET" && url.pathname === "/api/config") {
       return Response.json({ piholePanel: PIHOLE_PANEL });
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/floodlights") {
+      if (!HASS_TOKEN) return Response.json({ configured: false });
+      try {
+        const lights = await Promise.all(
+          FLOODLIGHT_ENTITIES.map(async (eid) => {
+            const r = await hassFetch(`/api/states/${encodeURIComponent(eid)}`);
+            if (!r.ok) throw new Error(`hass ${eid} ${r.status}`);
+            const s: any = await r.json();
+            return { entity_id: eid, state: s.state };
+          }),
+        );
+        return Response.json({ configured: true, lights });
+      } catch {
+        return Response.json({ configured: true, error: true });
+      }
+    }
+
+    {
+      // Live HD MJPEG via go2rtc (transcodes the camera's H.265 main
+      // stream → MJPEG on demand). Long-lived HTTP connection, browser
+      // renders directly via <img src=…>. Resolution is full sensor
+      // output (5120×1552 for these Reolink F-series).
+      const m = url.pathname.match(/^\/api\/camera-stream\/([a-z_]+)$/);
+      if (m && req.method === "GET") {
+        const valid = new Set(["front_door", "deck"]);
+        if (!valid.has(m[1])) return new Response("bad slug", { status: 404 });
+        try {
+          const r = await fetch(`http://go2rtc:1984/api/stream.mjpeg?src=${m[1]}`);
+          if (!r.ok || !r.body) return new Response("go2rtc call failed", { status: 502 });
+          return new Response(r.body, {
+            headers: {
+              "Content-Type": r.headers.get("content-type") || "multipart/x-mixed-replace",
+              "Cache-Control": "no-store",
+            },
+          });
+        } catch {
+          return new Response("go2rtc error", { status: 502 });
+        }
+      }
+    }
+
+    {
+      // HD snapshot from go2rtc (single frame extracted from the
+      // ongoing transcoded stream). Same source as /api/camera-stream
+      // so the snapshot matches what's live.
+      const m = url.pathname.match(/^\/api\/camera-snapshot\/([a-z_]+)$/);
+      if (m && req.method === "GET") {
+        const valid = new Set(["front_door", "deck"]);
+        if (!valid.has(m[1])) return new Response("bad slug", { status: 404 });
+        try {
+          const r = await fetch(`http://go2rtc:1984/api/frame.jpeg?src=${m[1]}`);
+          if (!r.ok || !r.body) return new Response("go2rtc call failed", { status: 502 });
+          return new Response(r.body, {
+            headers: {
+              "Content-Type": r.headers.get("content-type") || "image/jpeg",
+              "Cache-Control": "no-store",
+            },
+          });
+        } catch {
+          return new Response("go2rtc error", { status: 502 });
+        }
+      }
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/cam-recordings") {
+      const cams = ["front_door", "deck"] as const;
+      const out: { cam: string; filename: string; mtimeMs: number; sizeBytes: number }[] = [];
+      for (const cam of cams) {
+        try {
+          const files = await readdir(`/cam-recordings/${cam}`);
+          for (const fn of files) {
+            if (!fn.endsWith(".mp4")) continue;
+            try {
+              const s = await stat(`/cam-recordings/${cam}/${fn}`);
+              out.push({ cam, filename: fn, mtimeMs: s.mtimeMs, sizeBytes: s.size });
+            } catch { /* file vanished mid-read */ }
+          }
+        } catch { /* dir missing — fine, return empty for that cam */ }
+      }
+      out.sort((a, b) => b.mtimeMs - a.mtimeMs);
+      return Response.json(out.slice(0, 20));
+    }
+
+    {
+      // Serve a single clip — Bun.file responses handle Range requests
+      // automatically, so the browser can scrub through the video without
+      // downloading the whole file.
+      const m = url.pathname.match(/^\/api\/cam-recording\/(front_door|deck)\/([\w.-]+\.mp4)$/);
+      if (m && req.method === "GET") {
+        const path = `/cam-recordings/${m[1]}/${m[2]}`;
+        const file = Bun.file(path);
+        if (!(await file.exists())) return new Response("not found", { status: 404 });
+        return new Response(file, { headers: { "Content-Type": "video/mp4" } });
+      }
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/floodlights/panic") {
+      if (!HASS_TOKEN) return new Response("not configured", { status: 503 });
+      try {
+        const r = await hassFetch("/api/services/script/turn_on", {
+          method: "POST",
+          body: JSON.stringify({ entity_id: "script.panic_floodlights_and_sirens" }),
+        });
+        if (!r.ok) return new Response("hass call failed", { status: 502 });
+        return Response.json({ ok: true });
+      } catch {
+        return new Response("error", { status: 500 });
+      }
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/floodlights/toggle") {
+      if (!HASS_TOKEN) return new Response("not configured", { status: 503 });
+      try {
+        const body: any = await req.json();
+        const eid = body?.entity_id;
+        if (typeof eid !== "string" || !FLOODLIGHT_ENTITIES.includes(eid)) {
+          return new Response("bad entity_id", { status: 400 });
+        }
+        const r = await hassFetch("/api/services/light/toggle", {
+          method: "POST",
+          body: JSON.stringify({ entity_id: eid }),
+        });
+        if (!r.ok) return new Response("hass call failed", { status: 502 });
+        return Response.json({ ok: true });
+      } catch {
+        return new Response("bad request", { status: 400 });
+      }
     }
 
     if (req.method === "GET" && url.pathname === "/api/pihole-top-blocked") {

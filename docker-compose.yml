@@ -106,6 +106,49 @@ services:
       - 6881:6881/udp
     restart: unless-stopped
 
+  go2rtc:
+    image: alexxit/go2rtc:1.9.10
+    container_name: go2rtc
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    env_file:
+      - .api_keys
+    volumes:
+      - ./go2rtc/go2rtc.yaml:/config/go2rtc.yaml:ro
+    # 1984 = HTTP API + web UI (only reached via docker network, no host port)
+    # 8554 = RTSP server (unused for our setup)
+    # 8555 = WebRTC TCP (for browser RTC negotiation if we ever wire it)
+    restart: unless-stopped
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    user: "${PUID_HOMEASSISTANT}:${PGID}"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    environment:
+      - TZ=${TZ}
+    volumes:
+      # Whole HA /config lives in the repo. A .gitignore inside
+      # homeassistant/ keeps only YAMLs + markdown tracked; HA's runtime
+      # crap (DB, .storage, logs, secrets) stays out of git.
+      - ./homeassistant:/config
+      # Event-triggered camera clips. HA's camera.record service writes
+      # 30s clips here on person/vehicle detection. Lives on /mnt/disk2
+      # (single-disk, no mergerfs distribution) so writes are predictable
+      # and a 7-day rotating store has a fixed home.
+      - /mnt/disk2/cam-recordings:/media/cam-recordings
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 8123:8123
+    restart: unless-stopped
+
   navidrome:
     image: deluan/navidrome:0.56.1
     container_name: navidrome
@@ -173,6 +216,9 @@ services:
       - ./dashboard/public:/app/public
       - ${DATA_ROOT}:/hostdata:ro
       - ${CONFIG_ROOT}/pihole/etc-pihole/dhcp.leases:/pihole/dhcp.leases:ro
+      # Read-only access to HA's cam-recordings so the dashboard can
+      # list + serve them in the Floodlights panel.
+      - /mnt/disk2/cam-recordings:/cam-recordings:ro
     restart: unless-stopped
 
   caddy:

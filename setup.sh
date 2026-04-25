@@ -17,7 +17,7 @@ else
 fi
 
 GROUP_NAME=media
-SERVICES=(jellyfin sonarr radarr prowlarr qbittorrent bazarr navidrome)
+SERVICES=(jellyfin sonarr radarr prowlarr qbittorrent bazarr navidrome homeassistant)
 
 echo "==> Creating shared group: $GROUP_NAME"
 if ! getent group "$GROUP_NAME" > /dev/null 2>&1; then
@@ -60,6 +60,7 @@ sed -i "s/^PUID_PROWLARR=.*/PUID_PROWLARR=${PUIDS[prowlarr]}/" "$ENV_FILE"
 sed -i "s/^PUID_QBITTORRENT=.*/PUID_QBITTORRENT=${PUIDS[qbittorrent]}/" "$ENV_FILE"
 sed -i "s/^PUID_BAZARR=.*/PUID_BAZARR=${PUIDS[bazarr]}/" "$ENV_FILE"
 sed -i "s/^PUID_NAVIDROME=.*/PUID_NAVIDROME=${PUIDS[navidrome]}/" "$ENV_FILE"
+sed -i "s/^PUID_HOMEASSISTANT=.*/PUID_HOMEASSISTANT=${PUIDS[homeassistant]}/" "$ENV_FILE"
 
 echo ""
 echo "==> Creating data directories"
