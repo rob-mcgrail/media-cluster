@@ -133,6 +133,18 @@ Web admin password is in `.api_keys` as `FTLCONF_webserver_api_password` and loa
 
 Android-specific notes: each phone's *Private DNS* setting (Settings → Network & Internet) must be **Off** or **Automatic**. Any other value (dns.google, 1dot1dot1dot1.cloudflare-dns.com) bypasses Pi-hole entirely via DoT.
 
+## Home Assistant
+
+Two Reolink floodlight cams (`Front door`, `Deck`) integrated via the Reolink integration. Floodlights auto-on at night when motion + person/vehicle, auto-off after 2 min quiet. Manual `panic_floodlights_and_sirens` script for emergencies (lights + sirens, fired from the dashboard's Floodlights panel).
+
+**Custom HA image** (`./homeassistant-image/Dockerfile`) on top of `ghcr.io/home-assistant/home-assistant:stable` — adds `intel-media-driver` + `LIBVA_DRIVER_NAME=iHD` so HA's bundled ffmpeg can use VAAPI on the Intel iGPU. Container has `/dev/dri:/dev/dri` and `group_add: ["993"]` (host `render` GID).
+
+**HD clip recording** — each detection fires `shell_command.record_<cam>` which runs `ffmpeg -hwaccel vaapi -c:v h264_vaapi` against go2rtc's RTSP feed and writes a 60s MP4 to `/mnt/disk2/cam-recordings/<cam>/`. The shell_command is wrapped in `sh -c '... &'` so it returns instantly — HA has a hardcoded 60s timeout that would otherwise SIGKILL ffmpeg before it could finalize the MP4 (no `moov` atom = unplayable). Detached, ffmpeg runs to completion under PID 1 reparenting. `mode: single + delay: 45s` per automation gates re-triggers.
+
+**Presence-aware skip** — `binary_sensor.rob_home` is a template that ORs `device_tracker.kochi == home` (Companion app GPS) with `sensor.kochi_wi_fi_connection == "<home SSID>"` (Companion app WiFi). The clip automations skip daytime detections (07:00–19:00) when home; record always at night, or any time we're away.
+
+See `homeassistant/NOTES.md` for full setup steps, entity IDs, and the Companion app config.
+
 ## jellyfin-proxy
 
 Openresty sidecar that rewrites `PlaybackInfo` on the `jellyfin-force-transcode.{DOMAIN}` subdomain to force HEVC transcoding for clients whose decoders stutter on real HEVC (Android TV). See `openresty/README.md` for the why, architecture, and gotchas.
