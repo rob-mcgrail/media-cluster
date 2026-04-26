@@ -37,6 +37,18 @@ streams:
     - rtsp://admin:${REOLINK_DECK_PASSWORD}@192.168.1.8:554/h264Preview_01_sub
     - ffmpeg:deck_sub#video=mjpeg#hardware
 
+  # Mobile-targeted MJPEG variants — sub stream scaled to 960×288 (half
+  # the linear resolution of the sub stream → 1/4 the per-frame JPEG
+  # bytes). Mobile Chrome's multipart/x-mixed-replace decoder wedges
+  # under sustained backpressure when fed full-rate 1920×576 MJPEG —
+  # JPEG-decode thread falls behind, HTTP flow-control window closes,
+  # the <img> tag stops rendering after ~1s of frames. A smaller frame
+  # keeps it under that threshold.
+  front_door_mobile:
+    - ffmpeg:front_door_sub#video=mjpeg#hardware#width=960#height=288
+  deck_mobile:
+    - ffmpeg:deck_sub#video=mjpeg#hardware#width=960#height=288
+
 api:
   origin: '*'   # CORS open — only reachable via the docker network anyway
 

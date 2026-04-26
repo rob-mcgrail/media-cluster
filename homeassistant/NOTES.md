@@ -97,6 +97,22 @@ Other cam-side settings worth knowing about (read-only from HA, set via Reolink 
 
 ---
 
+## Dashboard live-stream variants
+
+The Floodlights panel pulls live MJPEG over HTTP from go2rtc through a Bun proxy in the dashboard. Three feed sizes exist, each defined in `go2rtc/go2rtc.yaml`:
+
+| Source | Used by | Notes |
+|---|---|---|
+| `<cam>_sub`    | Desktop tile preview      | H.264 sub stream → MJPEG via VAAPI. 1920×576. |
+| `<cam>`        | Desktop modal fullscreen  | H.265 main stream → MJPEG via VAAPI. 5120×1552. |
+| `<cam>_mobile` | Phone tile + phone modal  | H.264 sub stream → MJPEG via VAAPI, scaled to 960×288. ~¼ the per-frame bytes of `_sub`. |
+
+The mobile variant exists because Chrome on Android **wedges its `<img>`+`multipart/x-mixed-replace` decoder under sustained backpressure** — about 1 second of frames render, then the JPEG-decode thread falls behind, the HTTP flow-control window closes, and the tag stops rendering entirely. Smaller frames keep mobile under the threshold. The dashboard detects mobile via `window.matchMedia('(pointer: coarse)')` at module load and picks `/api/camera-{preview,stream}-mobile/...` instead of the default endpoints.
+
+Modal fullscreen is also mobile-only — `requestFullscreen()` + landscape-lock is called only when `pointer: coarse`. On desktop the modal already fills the viewport with the panoramic frame in landscape, so the OS-level fullscreen API call only added a permission-style banner the user had to dismiss.
+
+---
+
 ## Presence detection (`binary_sensor.rob_home`)
 
 A template binary sensor that's `on` if **either** signal says we're

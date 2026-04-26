@@ -463,10 +463,21 @@ const server = Bun.serve({
       //                                much lighter than MJPEG.
       // All paths transcode through Intel VAAPI on the iGPU.
       const valid = new Set(["front_door", "deck"]);
-      const mjpeg = url.pathname.match(/^\/api\/camera-(preview|stream)\/([a-z_]+)$/);
+      // Match /api/camera-(preview|stream)[-mobile]/<cam>. The optional
+      // -mobile suffix routes to a smaller go2rtc variant (960×288,
+      // ~1/4 per-frame bytes) for phones whose Chrome MJPEG handler
+      // wedges on the full-rate sub-stream feed.
+      const mjpeg = url.pathname.match(/^\/api\/camera-(preview|stream)(-mobile)?\/([a-z_]+)$/);
       if (mjpeg && req.method === "GET") {
-        if (!valid.has(mjpeg[2])) return new Response("bad slug", { status: 404 });
-        const src = mjpeg[1] === "preview" ? `${mjpeg[2]}_sub` : mjpeg[2];
+        if (!valid.has(mjpeg[3])) return new Response("bad slug", { status: 404 });
+        const isMobile = !!mjpeg[2];
+        const cam = mjpeg[3];
+        // Source mapping:
+        //   preview  → <cam>_sub        (sub stream MJPEG)
+        //   stream   → <cam>            (main stream MJPEG)
+        //   *-mobile → <cam>_mobile     (downscaled sub stream — both
+        //              tile and modal share this on phones)
+        const src = isMobile ? `${cam}_mobile` : (mjpeg[1] === "preview" ? `${cam}_sub` : cam);
         try {
           const r = await fetch(`http://go2rtc:1984/api/stream.mjpeg?src=${src}`);
           if (!r.ok || !r.body) return new Response("go2rtc call failed", { status: 502 });

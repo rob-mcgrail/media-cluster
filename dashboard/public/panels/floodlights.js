@@ -13,6 +13,13 @@ const CAMS = [
 ];
 const HA_DASH_URL = 'https://ha.office-computer-online-worldwide.org/lovelace-floodlights/floodlights';
 
+// Phones use a smaller MJPEG variant (960×288) for both tile + modal.
+// Mobile Chrome's <img>+multipart/x-mixed-replace handler wedges under
+// the full-rate 1920×576 stream — see go2rtc.yaml for the full why.
+// `pointer: coarse` is the standard touch-device test; matches
+// phones/tablets, not laptops with a touchscreen-and-mouse.
+const IS_MOBILE = window.matchMedia('(pointer: coarse)').matches;
+
 let root, listEl;
 let state = null; // { configured: bool, lights?: [{entity_id,state}], error?: bool }
 let clips = [];   // [{cam, filename, mtimeMs, sizeBytes}, ...]
@@ -34,13 +41,15 @@ function dots() {
 // open stream for an off-screen panel.
 function startTileStreams() {
   if (!root) return;
+  const path = IS_MOBILE ? '/api/camera-preview-mobile/' : '/api/camera-preview/';
   root.querySelectorAll('img.fl-cam-snap').forEach(img => {
     const slug = img.dataset.slug;
     // Tile uses the SD sub stream — much lighter than the HD main
     // stream the modal pulls. The tile is small anyway, and this keeps
-    // CPU/GPU near zero when the panel's just sitting visible.
-    if (slug && !img.src.includes('/api/camera-preview/')) {
-      img.src = `/api/camera-preview/${slug}`;
+    // CPU/GPU near zero when the panel's just sitting visible. Phones
+    // get the further-downscaled "-mobile" variant (see top of file).
+    if (slug && !img.src.includes(path)) {
+      img.src = `${path}${slug}`;
     }
   });
 }
@@ -250,16 +259,15 @@ function openClipModal(eventClips) {
 function openCamModal(slug, name) {
   const overlay = document.createElement('div');
   overlay.className = 'fl-cam-modal';
-  // MJPEG of the HD main stream via go2rtc (transcoded MJPEG via VAAPI
-  // on the iGPU). Tried switching to <video> + fragmented MP4 for
-  // efficiency but it played one frame and stalled — likely a fmp4
-  // streaming quirk through the Bun fetch proxy. MJPEG via <img>
-  // streams reliably; CPU cost is acceptable now that VAAPI is doing
-  // the heavy lifting.
+  // Modal source: phones get the downsampled mobile variant (960×288)
+  // because Chrome-on-Android's MJPEG handler wedges on the full-rate
+  // HD stream. Desktops get the HD main stream MJPEG. Tried fmp4 in
+  // the past — played one frame and stalled.
+  const src = IS_MOBILE ? `/api/camera-stream-mobile/${slug}` : `/api/camera-stream/${slug}`;
   overlay.innerHTML = `
     <button class="fl-cam-modal-close" aria-label="Close">×</button>
     <div class="fl-cam-modal-name">${name}</div>
-    <img class="fl-cam-modal-img" src="/api/camera-stream/${slug}" alt="${name}">
+    <img class="fl-cam-modal-img" src="${src}" alt="${name}">
   `;
   document.body.appendChild(overlay);
 
@@ -278,9 +286,12 @@ function openCamModal(slug, name) {
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   document.addEventListener('keydown', onKey);
 
-  // Try to go fullscreen + lock landscape. iOS Safari ignores both;
-  // fall back is a CSS-rotated overlay below.
-  if (overlay.requestFullscreen) {
+  // Mobile only: request OS-level fullscreen + lock landscape. On
+  // desktop the modal already fills the viewport with the panoramic
+  // frame in its native landscape orientation, so the fullscreen API
+  // call adds nothing but a permission-style fullscreen-banner
+  // (Esc-to-exit) that the user has to dismiss.
+  if (IS_MOBILE && overlay.requestFullscreen) {
     overlay.requestFullscreen()
       .then(() => {
         if (screen.orientation && screen.orientation.lock) {
