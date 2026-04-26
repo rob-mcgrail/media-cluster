@@ -11,7 +11,16 @@
     the second cam's detection-stack latency on top.
     mode:single + 45s delay = ONE combined event lock — a follow-up
     trigger from either cam within 45s is dropped because both clips
-    are already in flight. Daytime-at-home skip applies as before.
+    are already in flight.
+    Daytime gate is the manual `input_boolean.skip_daytime_recordings`
+    toggle — when on (default), clips are skipped 7am–7pm. Replaced
+    the auto presence check (binary_sensor.rob_home) because HA is
+    LAN-only and the Companion app can't push presence from cellular,
+    so the auto check stayed stuck on "home" all day and ate every
+    away-during-the-day event. The manual toggle puts the user in
+    control; flip it off via either dashboard before going out for
+    the day. Re-introduce auto-presence once HA is externally
+    reachable (Cloudflare Tunnel planned).
   mode: single
   trigger:
     - platform: state
@@ -25,7 +34,7 @@
     - condition: or
       conditions:
         - condition: state
-          entity_id: binary_sensor.rob_home
+          entity_id: input_boolean.skip_daytime_recordings
           state: "off"
         - condition: time
           after: "19:00:00"
@@ -59,6 +68,26 @@
     - service: input_boolean.turn_on
       target:
         entity_id: input_boolean.floodlights_auto
+
+- id: bootstrap_skip_daytime_recordings
+  alias: "Bootstrap: default skip_daytime_recordings to on"
+  description: >-
+    Same first-boot helper for the skip-daytime toggle — `on` is the
+    sensible default (don't fill disk with clips of yourself moving
+    around during the day). User flips it off via the dashboard
+    before leaving for the day.
+  mode: single
+  trigger:
+    - platform: homeassistant
+      event: start
+  condition:
+    - condition: state
+      entity_id: input_boolean.skip_daytime_recordings
+      state: unknown
+  action:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.skip_daytime_recordings
 
 - id: floodlights_on_when_either_cam_detects
   alias: "Floodlights: turn on when either cam detects person/vehicle"

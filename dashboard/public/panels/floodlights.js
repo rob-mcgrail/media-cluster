@@ -7,6 +7,12 @@ const LIGHTS = [
   { id: 'light.front_door_floodlight_cam_floodlight', name: 'Front door' },
   { id: 'light.deck_floodlight_cam_floodlight',       name: 'Deck' },
 ];
+// Recording preferences — togglable settings that aren't lights but
+// share the same toggle endpoint (server dispatches by entity domain).
+const SKIP_DAYTIME_ID = 'input_boolean.skip_daytime_recordings';
+const SETTINGS = [
+  { id: SKIP_DAYTIME_ID, name: 'Skip daytime clips', hint: 'No recordings 7am–7pm' },
+];
 const CAMS = [
   { slug: 'front_door', name: 'Front door' },
   { slug: 'deck',       name: 'Deck' },
@@ -80,6 +86,29 @@ async function refresh() {
   pending.clear();
   await loadClips();
   render();
+}
+
+// Same /toggle endpoint as the lights, but no ALL_ID propagation
+// since settings entities are independent of each other.
+async function toggleSetting(entity_id) {
+  if (!state || !state.lights) return;
+  if (pending.has(entity_id)) return;
+  pending.add(entity_id);
+  render();
+  try {
+    const res = await fetch('/api/floodlights/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entity_id }),
+    });
+    if (!res.ok) throw new Error();
+    // input_boolean toggles in HA are instant — no Reolink delay to
+    // wait out — so refresh quickly.
+    setTimeout(refresh, 200);
+  } catch {
+    pending.clear();
+    render();
+  }
 }
 
 async function toggle(entity_id) {
@@ -184,6 +213,25 @@ function render() {
     + `<button class="fl-silence" data-state="armed" type="button" aria-label="Silence sirens">
          <span class="fl-silence-label">SILENCE SIRENS</span>
        </button>`
+    + (SETTINGS.length ? `<div class="fl-settings">
+         <div class="fl-settings-title">RECORDING</div>
+         ${SETTINGS.map(s => {
+           const isOn = byId.get(s.id) === 'on';
+           const isPending = pending.has(s.id);
+           return `
+             <div class="fl-setting-row" data-id="${esc(s.id)}">
+               <div class="fl-setting-text">
+                 <div class="fl-setting-name">${esc(s.name)}</div>
+                 <div class="fl-setting-hint">${esc(s.hint || '')}</div>
+               </div>
+               <button class="fl-toggle ${isOn ? 'on' : 'off'} ${isPending ? 'pending' : ''}" aria-pressed="${isOn}" ${isPending ? 'aria-busy="true"' : ''}>
+                 <span class="fl-indicator"></span>
+                 <span class="fl-state">${isPending ? '…' : (isOn ? 'ON' : 'OFF')}</span>
+               </button>
+             </div>
+           `;
+         }).join('')}
+       </div>` : '')
     + eventsHtml;
   const panicBtn = listEl.querySelector('.fl-panic');
   if (panicBtn) panicBtn.addEventListener('click', panicClick);
@@ -202,6 +250,10 @@ function render() {
   listEl.querySelectorAll('.fl-row').forEach(row => {
     const btn = row.querySelector('.fl-toggle');
     btn.addEventListener('click', () => toggle(row.dataset.id));
+  });
+  listEl.querySelectorAll('.fl-setting-row').forEach(row => {
+    const btn = row.querySelector('.fl-toggle');
+    btn.addEventListener('click', () => toggleSetting(row.dataset.id));
   });
 }
 

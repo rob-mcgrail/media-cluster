@@ -276,6 +276,32 @@
   display: flex; align-items: center; justify-content: center;
 }
 
+/* Recording preferences — sits between PANIC/SILENCE and the recent
+   clips list. Distinct from the bright "alert" controls above so it
+   reads as a settings section, not another emergency button. */
+.fl-settings {
+  margin-top: 1.5rem;
+}
+.fl-settings-title {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
+  color: #fb7185; margin-bottom: 0.5rem;
+}
+.fl-setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #170c0e; border: 1px solid #3a1820; border-radius: 12px;
+  padding: 0.75rem 1rem; margin-bottom: 0.4rem;
+}
+.fl-setting-text {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  min-width: 0;
+}
+.fl-setting-name {
+  font-size: 0.92rem; font-weight: 600; color: #fda4af;
+}
+.fl-setting-hint {
+  font-size: 0.7rem; color: #6a3a3f;
+}
+
 /* Recent clips list — paired events (one row per detection burst that
    may include both cams). Tap a row to open the playback modal with
    both videos side-by-side. */

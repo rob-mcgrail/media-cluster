@@ -17,6 +17,15 @@ input_boolean:
   floodlights_auto:
     name: "Auto-floodlights enabled"
     icon: mdi:lightbulb-auto
+  # Manual day-skip toggle. State `on` = clip-recording automation is
+  # gated to nighttime (19:00–07:00). State `off` = record any time.
+  # Replaces the presence-based gate (binary_sensor.rob_home) since HA
+  # is LAN-only and the Companion app can't push presence updates from
+  # cellular — leaves the user to flip this manually before going out.
+  # Defaulted to `on` by the bootstrap automation on first boot.
+  skip_daytime_recordings:
+    name: "Skip daytime recordings"
+    icon: mdi:weather-sunny-off
 
 # Aggregated "is Rob home?" signal. The Companion App's GPS
 # device_tracker can be slow to update or briefly drift to

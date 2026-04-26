@@ -22,10 +22,15 @@ const PIHOLE_PANEL: "off" | "blocks" | "clients" =
 const HASS_URL = process.env.HASS_URL || "http://homeassistant:8123";
 const HASS_TOKEN = process.env.HASS_TOKEN || "";
 
+// Entities surfaced + togglable from the dashboard's Floodlights panel.
+// Mixed-domain: lights for the on/off control rows, the input_boolean
+// for the "Skip daytime recordings" preference toggle. The /toggle
+// endpoint dispatches to the correct HA service based on entity domain.
 const FLOODLIGHT_ENTITIES = [
   "light.all_floodlights",
   "light.front_door_floodlight_cam_floodlight",
   "light.deck_floodlight_cam_floodlight",
+  "input_boolean.skip_daytime_recordings",
 ];
 
 async function hassFetch(path: string, init: RequestInit = {}): Promise<Response> {
@@ -610,7 +615,10 @@ const server = Bun.serve({
         if (typeof eid !== "string" || !FLOODLIGHT_ENTITIES.includes(eid)) {
           return new Response("bad entity_id", { status: 400 });
         }
-        const r = await hassFetch("/api/services/light/toggle", {
+        // Dispatch to the entity's domain — light.toggle for lights,
+        // input_boolean.toggle for the skip-daytime preference.
+        const domain = eid.split(".", 1)[0];
+        const r = await hassFetch(`/api/services/${domain}/toggle`, {
           method: "POST",
           body: JSON.stringify({ entity_id: eid }),
         });
