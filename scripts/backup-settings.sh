@@ -31,9 +31,20 @@ curl -s -H "X-Api-Key: $SONARR_API_KEY" "$SONARR_URL/api/v3/naming" | jq '.' > "
 echo "    quality-profiles, quality-definitions, custom-formats, root-folders, download-clients, naming"
 
 echo "==> Prowlarr"
-curl -s -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v1/indexer" | jq '[.[] | {name, definitionName, protocol, fields: [.fields[] | select(.privacy != "apiKey" and .privacy != "password") | {name, value}]}]' > "$SETTINGS_DIR/prowlarr/indexers.json"
+# Strip secrets from indexer field dumps. Three layers of defense:
+#  1) drop fields with privacy=apiKey / password / userPrivate
+#  2) drop fields by sensitive name (cookie) and any field whose name matches
+#     password/apikey/token/secret/cookie (case-insensitive)
+#  3) restore step has the user re-enter these by hand, same as the
+#     download-client passwords above.
+PROWLARR_FIELD_FILTER='select(
+    .privacy != "apiKey" and .privacy != "password" and .privacy != "userPrivate"
+    and .name != "cookie"
+    and (.name | test("(?i)(password|apikey|token|secret|cookie)") | not)
+  ) | {name, value}'
+curl -s -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v1/indexer" | jq "[.[] | {name, definitionName, protocol, fields: [.fields[] | $PROWLARR_FIELD_FILTER]}]" > "$SETTINGS_DIR/prowlarr/indexers.json"
 curl -s -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v1/applications" | jq '[.[] | {name, implementation, syncLevel}]' > "$SETTINGS_DIR/prowlarr/apps.json"
-curl -s -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v1/indexerproxy" | jq '[.[] | {name, implementation, fields: [.fields[] | select(.privacy != "apiKey" and .privacy != "password") | {name, value}]}]' > "$SETTINGS_DIR/prowlarr/indexer-proxies.json"
+curl -s -H "X-Api-Key: $PROWLARR_API_KEY" "$PROWLARR_URL/api/v1/indexerproxy" | jq "[.[] | {name, implementation, fields: [.fields[] | $PROWLARR_FIELD_FILTER]}]" > "$SETTINGS_DIR/prowlarr/indexer-proxies.json"
 echo "    indexers, apps, indexer-proxies"
 
 echo "==> Bazarr"

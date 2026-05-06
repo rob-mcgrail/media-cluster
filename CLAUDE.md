@@ -149,14 +149,6 @@ See `homeassistant/NOTES.md` for full setup steps, entity IDs, and the Companion
 
 Openresty sidecar that rewrites `PlaybackInfo` on the `jellyfin-force-transcode.{DOMAIN}` subdomain to force HEVC transcoding for clients whose decoders stutter on real HEVC (Android TV). See `openresty/README.md` for the why, architecture, and gotchas.
 
-## tracker-watch
-
-Polls /r/OpenSignups (Reddit JSON) and Cinemageddon/Karagarga homepages every 15 min for private-tracker signup opportunities. Fires push notifications via the dashboard's `/api/event` endpoint when a watchlisted tracker (Cinemageddon, Karagarga, MoreThanTV, PassThePopcorn) shows up — name matches in Reddit post titles/selftext, or homepage content hash changes (after stripping volatile content like counters).
-
-State (seen Reddit post IDs, content hashes) lives in the `tracker-watch-state` named volume. Run-once for testing: `docker compose run --rm tracker-watch --once`.
-
-The dashboard's last tab — **Signup study guide** — is the prep notes for these tracker interviews. Edit `dashboard/public/study-guide.md` to update; the panel re-fetches on pull-to-refresh.
-
 ## Jellyfin libraries
 
 | Library     | Type    | Path                   |
@@ -168,14 +160,15 @@ The dashboard's last tab — **Signup study guide** — is the prep notes for th
 
 ## Quality profiles
 
-| Profile  | Use for                         | Max (2hr movie) | Notes                        |
-|----------|---------------------------------|-----------------|------------------------------|
-| Rob1080  | TV, kids content, default       | ~18 GB          | Radarr: 1080p only. Sonarr: 720p + 1080p (some shows just aren't available in 1080p). HEVC preferred (+10 score) |
-| Rob4K    | Movies (when disk space allows) | ~34 GB          | 1080p + 4K, no remuxes       |
+| Profile      | Use for                         | Max (2hr movie) | Notes                        |
+|--------------|---------------------------------|-----------------|------------------------------|
+| Rob1080      | TV, kids content, default       | ~18 GB          | Radarr: 1080p only. Sonarr: 720p + 1080p (some shows just aren't available in 1080p). HEVC preferred (+10 score) |
+| Rob4K        | Movies (when disk space allows) | ~34 GB          | 1080p Bluray + 4K WEB/Bluray, no remuxes  |
+| RobDifficult | Auto-applied to stuck movies    | ~35 GB (Remux)  | Adds 720p tiers (≥3 GB only) and Remux-1080p / Remux-2160p on top of Rob4K. The triage bot escalates to this profile when a movie has been monitored+missing for 14+ days. |
 
-Both profiles block YTS/YIFY via a `-10000` custom format score.
+All three profiles block YTS/YIFY via a `-10000` custom format score and prefer HEVC (+10).
 
-When adding new content: use **Rob1080** for all TV shows (Sonarr) and any kids content. Use **Rob4K** for recent releases, highly cinematic films (Scorsese, Kubrick, PTA, etc.), and anything where the visual quality is worth it. When in doubt for movies, prefer Rob1080.
+When adding new content: use **Rob1080** for all TV shows (Sonarr) and any kids content. Use **Rob4K** for recent releases, highly cinematic films (Scorsese, Kubrick, PTA, etc.), and anything where the visual quality is worth it. When in doubt for movies, prefer Rob1080. **Don't manually assign RobDifficult** — let the triage bot escalate to it after the strict profiles have failed for two weeks. Cutoff is Bluray-2160p so any later high-quality release still triggers an upgrade.
 
 ### Size limits (MB/min, per quality definition)
 
@@ -183,10 +176,15 @@ Radarr and Sonarr each have their own set of quality definitions. Values below a
 
 | Quality        | Min | Preferred | Max |
 |----------------|----:|----------:|----:|
+| HDTV-720p      |  25 |        95 | 100 |
+| WEBDL-720p     |  25 |        95 | 100 |
+| WEBRip-720p    |  25 |        95 | 100 |
+| Bluray-720p    |  25 |        95 | 100 |
 | HDTV-1080p     |  20 |        50 |  55 |
 | WEBDL-1080p    |  20 |        50 |  65 |
 | WEBRip-1080p   |  20 |        50 |  90 |
 | Bluray-1080p   |  20 |        60 | 150 |
+| Remux-1080p    |  20 |        60 | 290 |
 | HDTV-2160p     |   0 |       160 | 200 |
 | WEBDL-2160p    |   0 |       160 | 200 |
 | WEBRip-2160p   |   0 |       160 | 250 |
@@ -195,6 +193,8 @@ Radarr and Sonarr each have their own set of quality definitions. Values below a
 Trade-off notes:
 - **Bluray-1080p max=150** is intentionally permissive so OFT/SPARKS-style x264 catalog releases for obscure films still qualify where no x265 alternative exists. Tightening to ~90-100 would bias harder toward x265 (SARTRE, r00t, BONE, SM737) but would miss some OFT-only titles.
 - **min=20** on 1080p tiers auto-rejects YIFY-sized releases (~8-16 MB/min) even before the custom-format penalty hits.
+- **720p min=25** (~3 GB at 120 min) means RobDifficult only accepts solid 720p rips, not micro-encodes. Rob1080/Rob4K don't allow 720p at all so this only affects RobDifficult.
+- **Remux-1080p max=290** caps a 2 hr Remux at ~35 GB. Only RobDifficult accepts Remux-1080p.
 
 ### Release group notes
 

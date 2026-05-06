@@ -3,6 +3,10 @@
     "name": "movies",
     "savePath": "/data/torrents/movies"
   },
+  "radarr": {
+    "name": "radarr",
+    "savePath": ""
+  },
   "tv": {
     "name": "tv",
     "savePath": "/data/torrents/tv"

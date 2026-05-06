@@ -24,7 +24,8 @@
     "Name": "Kids TV",
     "CollectionType": "tvshows",
     "Locations": [
-      "/data/media/kids/tv"
+      "/data/media/kids/tv",
+      "/data/media/kids/youtube"
     ]
   }
 ]

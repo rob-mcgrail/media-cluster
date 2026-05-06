@@ -219,7 +219,7 @@
     },
     "title": "HDTV-720p",
     "weight": 14,
-    "minSize": 0,
+    "minSize": 25,
     "maxSize": 100,
     "preferredSize": 95,
     "id": 15
@@ -234,7 +234,7 @@
     },
     "title": "WEBDL-720p",
     "weight": 15,
-    "minSize": 0,
+    "minSize": 25,
     "maxSize": 100,
     "preferredSize": 95,
     "id": 16
@@ -249,7 +249,7 @@
     },
     "title": "WEBRip-720p",
     "weight": 15,
-    "minSize": 0,
+    "minSize": 25,
     "maxSize": 100,
     "preferredSize": 95,
     "id": 17
@@ -264,7 +264,7 @@
     },
     "title": "Bluray-720p",
     "weight": 16,
-    "minSize": 0,
+    "minSize": 25,
     "maxSize": 100,
     "preferredSize": 95,
     "id": 18
@@ -339,7 +339,9 @@
     },
     "title": "Remux-1080p",
     "weight": 20,
-    "minSize": 0,
+    "minSize": 20,
+    "maxSize": 290,
+    "preferredSize": 60,
     "id": 23
   },
   {

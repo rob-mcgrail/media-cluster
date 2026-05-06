@@ -7,7 +7,6 @@ import recsPanel from './panels/recs.js';
 import linksPanel from './panels/links.js';
 import doubleFeaturesPanel from './panels/double-features.js';
 import floodlightsPanel from './panels/floodlights.js';
-import studyGuidePanel from './panels/study-guide.js';
 import { setPanels } from './config.js';
 
 // Fetch runtime config before building the panel list so toggleable panels
@@ -18,11 +17,9 @@ try {
 } catch { /* use defaults */ }
 
 const basePanels = [doubleFeaturesPanel, recsPanel, historyPanel, mainPanel, torrentsPanel, statusPanel, floodlightsPanel, linksPanel];
-const withPihole = cfg.piholePanel && cfg.piholePanel !== 'off'
+const panels = cfg.piholePanel && cfg.piholePanel !== 'off'
   ? [...basePanels, piholePanel]
   : basePanels;
-// study-guide is always the very last tab
-const panels = [...withPihole, studyGuidePanel];
 setPanels(panels.length);
 
 const PAGES = panels.length;

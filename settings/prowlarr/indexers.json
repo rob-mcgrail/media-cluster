@@ -1,5 +1,123 @@
 [
   {
+    "name": "C411",
+    "definitionName": "c411",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "definitionFile",
+        "value": "c411"
+      },
+      {
+        "name": "baseUrl",
+        "value": null
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      },
+      {
+        "name": "info_key",
+        "value": "You can find or generate a new API Key by accessing the <a href=\"https://c411.org/user/integrations\" target=\"_blank\">C411 Intégrations API</a> page."
+      },
+      {
+        "name": "multilang",
+        "value": false
+      },
+      {
+        "name": "multilanguage",
+        "value": 0
+      },
+      {
+        "name": "vostfr",
+        "value": false
+      },
+      {
+        "name": "info_3x",
+        "value": "IF you want to see 3x torrents access your <a href=\"https://c411.org/user/settings\" target=\"_blank\">C411 Paramètres</a> page and tick the <b>Afficher le contenu XXX</b> checkbox."
+      }
+    ]
+  },
+  {
+    "name": "CinemaZ",
+    "definitionName": "CinemaZ",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "baseUrl",
+        "value": "https://cinemaz.to/"
+      },
+      {
+        "name": "username",
+        "value": "orb-orb"
+      },
+      {
+        "name": "freeleechOnly",
+        "value": false
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      }
+    ]
+  },
+  {
     "name": "kickasstorrents.ws",
     "definitionName": "kickasstorrents-ws",
     "protocol": "torrent",
@@ -55,13 +173,80 @@
     ]
   },
   {
-    "name": "LimeTorrents",
-    "definitionName": "limetorrents",
+    "name": "RuTracker.org",
+    "definitionName": "RuTracker.org",
+    "protocol": "torrent",
+    "fields": [
+      {
+        "name": "baseUrl",
+        "value": "https://rutracker.org/"
+      },
+      {
+        "name": "username",
+        "value": "orb-orb"
+      },
+      {
+        "name": "russianLetters",
+        "value": false
+      },
+      {
+        "name": "useMagnetLinks",
+        "value": false
+      },
+      {
+        "name": "addRussianToTitle",
+        "value": false
+      },
+      {
+        "name": "moveFirstTagsToEndOfReleaseTitle",
+        "value": false
+      },
+      {
+        "name": "moveAllTagsToEndOfReleaseTitle",
+        "value": false
+      },
+      {
+        "name": "baseSettings.queryLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.grabLimit",
+        "value": null
+      },
+      {
+        "name": "baseSettings.limitsUnit",
+        "value": 0
+      },
+      {
+        "name": "torrentBaseSettings.appMinimumSeeders",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedRatio",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.seedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.packSeedTime",
+        "value": null
+      },
+      {
+        "name": "torrentBaseSettings.preferMagnetUrl",
+        "value": false
+      }
+    ]
+  },
+  {
+    "name": "The Empire",
+    "definitionName": "theempire",
     "protocol": "torrent",
     "fields": [
       {
         "name": "definitionFile",
-        "value": "limetorrents"
+        "value": "theempire"
       },
       {
         "name": "baseUrl",
@@ -98,69 +283,26 @@
       {
         "name": "torrentBaseSettings.preferMagnetUrl",
         "value": false
-      },
-      {
-        "name": "downloadlink",
-        "value": 1
-      },
-      {
-        "name": "downloadlink2",
-        "value": 0
-      },
-      {
-        "name": "info_download",
-        "value": "As the .torrent download links on this site are known to fail from time to time, you can optionally set as a fallback an automatic alternate link."
       },
       {
         "name": "sort",
         "value": 0
       },
       {
-        "name": "info_category_8000",
-        "value": "LimeTorrents only returns category <b>Other</b> in its <i>Keywordless</i> search results page.</br>To pass your apps' indexer TEST you will need to include the 8000(Other) category."
-      }
-    ]
-  },
-  {
-    "name": "SubsPlease",
-    "definitionName": "SubsPlease",
-    "protocol": "torrent",
-    "fields": [
-      {
-        "name": "baseUrl",
-        "value": "https://subsplease.org/"
+        "name": "type",
+        "value": 1
       },
       {
-        "name": "baseSettings.queryLimit",
-        "value": null
+        "name": "info_tpp",
+        "value": "For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile."
       },
       {
-        "name": "baseSettings.grabLimit",
-        "value": null
+        "name": "info_tcg",
+        "value": "We wish to encourage all members to participate in the communities we are creating. We have worked with the Jackett maintainers to ensure that the security and longevity of our trackers continues, and as such some torrents are removed from the results in Jackett."
       },
       {
-        "name": "baseSettings.limitsUnit",
-        "value": 0
-      },
-      {
-        "name": "torrentBaseSettings.appMinimumSeeders",
-        "value": null
-      },
-      {
-        "name": "torrentBaseSettings.seedRatio",
-        "value": null
-      },
-      {
-        "name": "torrentBaseSettings.seedTime",
-        "value": null
-      },
-      {
-        "name": "torrentBaseSettings.packSeedTime",
-        "value": null
-      },
-      {
-        "name": "torrentBaseSettings.preferMagnetUrl",
-        "value": false
+        "name": "info_activity",
+        "value": "Unparked accounts that haven't visited (read: browsed) the site for 38 days (and are over 28 days old) are pruned. Parked accounts are pruned when 112 days have elapsed since the last recorded activity (read: browsed). Seeding activity does NOT count, you must BROWSE the site. Donators with a star (and ONLY donators with a star) are immune to auto-pruning. Power Users and above are also immune. We regularly clean out accounts with very low share ratios that are subject to the Ratio Watch system."
       }
     ]
   },
