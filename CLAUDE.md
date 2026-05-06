@@ -149,6 +149,14 @@ See `homeassistant/NOTES.md` for full setup steps, entity IDs, and the Companion
 
 Openresty sidecar that rewrites `PlaybackInfo` on the `jellyfin-force-transcode.{DOMAIN}` subdomain to force HEVC transcoding for clients whose decoders stutter on real HEVC (Android TV). See `openresty/README.md` for the why, architecture, and gotchas.
 
+## tracker-watch
+
+Polls /r/OpenSignups (Reddit JSON) and Cinemageddon/Karagarga homepages every 15 min for private-tracker signup opportunities. Fires push notifications via the dashboard's `/api/event` endpoint when a watchlisted tracker (Cinemageddon, Karagarga, MoreThanTV, PassThePopcorn) shows up — name matches in Reddit post titles/selftext, or homepage content hash changes (after stripping volatile content like counters).
+
+State (seen Reddit post IDs, content hashes) lives in the `tracker-watch-state` named volume. Run-once for testing: `docker compose run --rm tracker-watch --once`.
+
+The dashboard's last tab — **Signup study guide** — is the prep notes for these tracker interviews. Edit `dashboard/public/study-guide.md` to update; the panel re-fetches on pull-to-refresh.
+
 ## Jellyfin libraries
 
 | Library     | Type    | Path                   |

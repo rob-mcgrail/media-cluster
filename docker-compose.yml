@@ -422,12 +422,41 @@ services:
       - NET_ADMIN
     restart: unless-stopped
 
+  # tracker-watch — polls /r/OpenSignups + tracker homepages on a schedule
+  # and fires a push notification (via dashboard /api/event) when a
+  # watchlisted private tracker (Cinemageddon, Karagarga, MoreThanTV,
+  # PassThePopcorn) appears to have opened signups. State is persisted
+  # in a named volume so post IDs and content hashes survive restarts.
+  tracker-watch:
+    build: ./tracker-watch
+    container_name: tracker-watch
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    env_file:
+      - .api_keys
+    environment:
+      - TZ=${TZ}
+      - WATCH_INTERVAL_MIN=15
+      - DASHBOARD_URL=http://dashboard:8000
+    volumes:
+      - tracker-watch-state:/state
+    depends_on:
+      - dashboard
+    restart: unless-stopped
+
 volumes:
   # Tube Archivist — Redis + Elasticsearch indices. Named volumes (not
   # bind mounts) because the images don't honour host PUID/PGID and
   # the contents are internal indexer state, not user content.
   tubearchivist-redis:
   tubearchivist-es:
+  # tracker-watch state (seen Reddit post IDs, content hashes for
+  # Cinemageddon/Karagarga homepages). Internal to the service, no
+  # reason to bind-mount.
+  tracker-watch-state:
 
 networks:
   default:

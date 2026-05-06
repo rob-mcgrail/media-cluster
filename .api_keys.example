@@ -27,3 +27,8 @@ CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
 # Pi-hole web admin password + URL for API calls from the host
 FTLCONF_webserver_api_password=your-pihole-password
 PIHOLE_URL=http://localhost:7001
+
+# Shared token for the dashboard /api/event push endpoint. Used by the
+# movie-bot cron scripts and tracker-watch to fire push notifications.
+# Generate with: openssl rand -hex 24
+PUSH_EVENT_TOKEN=your-push-event-token

@@ -34,3 +34,7 @@ movie-bot-data/completed-double-feature-runs/*
 # Library sweep logs (missing/cutoff cron)
 movie-bot-data/sweep-logs/*
 !movie-bot-data/sweep-logs/.gitkeep
+
+# Python bytecode (e.g. tracker-watch syntax checks)
+__pycache__/
+*.pyc

@@ -1,0 +1,90 @@
+.panel-study { background: #0c0612; }
+
+.section-title-study {
+  font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;
+  color: #c084fc; margin-bottom: 1rem;
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+}
+
+.study-loading, .study-error {
+  color: #6b5780; text-align: center; margin-top: 3rem; font-size: 0.9rem;
+}
+.study-error { color: #f87171; }
+
+.study-content {
+  color: #d4c8e0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.study-content h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #e9d5ff;
+  margin: 0 0 0.6rem 0;
+  letter-spacing: 0.01em;
+}
+.study-content h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #c084fc;
+  margin: 1.5rem 0 0.5rem 0;
+  border-bottom: 1px solid #2a1a3a;
+  padding-bottom: 0.3rem;
+  letter-spacing: 0.02em;
+}
+.study-content h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #b794d4;
+  margin: 1rem 0 0.4rem 0;
+}
+
+.study-content p {
+  margin: 0.5rem 0;
+}
+
+.study-content strong { color: #e9d5ff; font-weight: 600; }
+.study-content em { color: #b794d4; font-style: italic; }
+
+.study-content ul, .study-content ol {
+  margin: 0.4rem 0 0.7rem 0;
+  padding-left: 1.4rem;
+}
+.study-content li { margin: 0.2rem 0; }
+.study-content li::marker { color: #7a5a9a; }
+
+.study-content hr {
+  border: none;
+  border-top: 1px solid #2a1a3a;
+  margin: 1.4rem 0;
+}
+
+.study-content code {
+  background: #1a0f26;
+  border: 1px solid #2a1a3a;
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: #d8b4fe;
+}
+
+.study-content blockquote {
+  margin: 0.5rem 0;
+  padding: 0.4rem 0.8rem;
+  border-left: 3px solid #7a5a9a;
+  background: rgba(122, 90, 154, 0.08);
+  color: #b794d4;
+  border-radius: 0 6px 6px 0;
+}
+
+.study-content a {
+  color: #c084fc;
+  text-decoration: underline;
+  text-decoration-color: rgba(192, 132, 252, 0.4);
+  text-underline-offset: 2px;
+}
+.study-content a:hover {
+  text-decoration-color: #c084fc;
+}
