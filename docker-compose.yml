@@ -218,6 +218,11 @@ services:
     # exposed to the LAN — Caddy on 443 is the public path.
     ports:
       - "127.0.0.1:8000:8000"
+    # Bun has a known leak in this app — RSS climbs over hours and has
+    # OOM-killed the box more than once. Cap it so a runaway just kills
+    # the container (Docker restarts it) instead of triggering a host
+    # OOM that nukes Jellyfin/qBit/whatever scored worst.
+    mem_limit: 2g
     logging:
       driver: json-file
       options:
