@@ -199,7 +199,6 @@ All services are available via HTTPS at `<service>.yourdomain.org`:
 | Navidrome | `https://navidrome.yourdomain.org` |
 | Home Assistant | `https://ha.yourdomain.org` |
 | Pi-hole | `https://pihole.yourdomain.org/admin` |
-| Pinchflat | `https://pinchflat.yourdomain.org` |
 
 Services are also available on their original ports via IP for direct access.
 
@@ -214,7 +213,7 @@ The dashboard is a mobile-first web app at `https://www.yourdomain.org` with 9 s
 5. **Downloads** (blue, octopus) — active torrents. Filters: **Downloading** (qBit-active — including stalled), **Seeding** (done / queued-UP), **Triaged** (anything with a `triage-*` tag, plus freshly-queued downloads that haven't become active yet). Triaged items show a sub-badge with the specific state (`paused`, `resumed`, `queued`, `stopped`, `error`, `missing`, `unknown`) and how long they've been in it.
 6. **Server** (purple, bugs) — CPU load, memory, swap, disk usage, plus active Jellyfin streams with transcoding / source-vs-output detail
 7. **Floodlights** (coral, fox) — Reolink floodlight cam controls via Home Assistant: per-cam + "All" toggles, live MJPEG previews of each cam (tap for fullscreen HD), recent motion-triggered HD clips (paired by event, side-by-side playback), a two-tap **PANIC** button (lights + sirens), and a single-tap **SILENCE SIRENS** button to undo the siren part. See `homeassistant/NOTES.md` for the recording pipeline + presence-aware skip logic.
-8. **YouTube** (lavender, clouds) — paste a YouTube URL, watch it land in the Kids YouTube library. Posts to `/api/youtube-grab`, which fire-and-forget spawns `scripts/youtube-grab.sh` (yt-dlp inside the dashboard container). Output lands at `/data/media/kids/youtube/<Channel>/<Title> [<id>].{mp4,nfo,jpg}`; NFO uses the `<movie>` schema so each video shows up as a top-level Jellyfin item. The script is also runnable from the host CLI for one-off use.
+8. **YouTube** (lavender, clouds) — paste a YouTube URL, watch it land in the Kids TV library. Posts to `/api/youtube-grab`, which fire-and-forget spawns `scripts/youtube-grab.sh` (yt-dlp inside the dashboard container; serialized via `flock` so concurrent submissions queue up rather than racing). Output lands at `/data/media/kids/youtube/<Channel>/<Title> [<id>].{mp4,nfo,info.json}` plus `<...>-thumb.jpg`; per-channel `tvshow.nfo` + `poster.jpg` + `fanart.jpg` are written on first video. NFOs use the `<episodedetails>` / `<tvshow>` schema so each channel surfaces as a Jellyfin TV show with its YouTube videos as episodes. The script is also runnable from the host CLI for one-off use.
 9. **Services** (yellow, bees) — quick links to all service dashboards
 
 #### Optional: Pi-hole panel
@@ -253,9 +252,11 @@ movie-bot-data/         # Movie Bot runtime state (gitignored contents)
   dismissed-double-features/ # dismissed pairings — bot reads these to avoid repeating
   recommendations.jsonl #   recs feed consumed by the dashboard Recs panel
   movie-thoughts.jsonl  #   per-movie user thoughts/ratings feeding future recs
+  youtube-grabs/        #   pending/completed job records for the YouTube panel
+  sweep-logs/           #   missing/cutoff cron logs
 caddy/                  # Custom Caddy build with Cloudflare DNS plugin
 openresty/              # jellyfin-proxy config (rewrites PlaybackInfo to strip HEVC)
-scripts/                # backup/restore-settings shell scripts
+scripts/                # backup/restore + library sweeps + youtube-grab worker
 config/                 # Per-container config volumes (gitignored)
 settings/               # Exported service settings (safe to commit)
 ```
