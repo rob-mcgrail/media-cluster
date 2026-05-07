@@ -1,4 +1,4 @@
-import { readdir, readFile, rename, stat, writeFile } from "node:fs/promises";
+import { readdir, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { loadavg, totalmem, freemem, cpus } from "node:os";
 import { statfsSync } from "node:fs";
 import webpush from "web-push";
@@ -12,6 +12,8 @@ const RECS_FILE = `${DATA_DIR}/recommendations.jsonl`;
 const THOUGHTS_FILE = `${DATA_DIR}/movie-thoughts.jsonl`;
 const DOUBLE_FEATURES_DIR = `${DATA_DIR}/double-features`;
 const DISMISSED_DOUBLE_FEATURES_DIR = `${DATA_DIR}/dismissed-double-features`;
+const YT_GRAB_PENDING_DIR = `${DATA_DIR}/youtube-grabs/pending`;
+const YT_GRAB_COMPLETED_DIR = `${DATA_DIR}/youtube-grabs/completed`;
 const QB_URL = "http://qbittorrent:8080";
 const JELLYFIN_URL = "http://jellyfin:8096";
 const PIHOLE_URL = "http://host.docker.internal:7001";
@@ -1038,6 +1040,95 @@ const server = Bun.serve({
         return Response.json({ ok: true, id });
       } catch {
         return new Response("Bad request", { status: 400 });
+      }
+    }
+
+    // YouTube panel: spawn youtube-grab.sh directly. Fire-and-forget —
+    // stdio fully ignored, proc.unref()'d so it detaches from the Bun
+    // event loop. No reference is retained anywhere in dashboard memory,
+    // so the spawn can't leak. The script writes its own status JSON to
+    // YT_GRAB_COMPLETED_DIR on exit (success or failure).
+    if (req.method === "POST" && url.pathname === "/api/youtube-grab") {
+      try {
+        const body = await req.json();
+        const ytUrl = (body.url || "").toString().trim();
+        if (!ytUrl) return new Response("No url provided", { status: 400 });
+        if (!/^https?:\/\/(www\.|m\.|music\.)?(youtube\.com|youtu\.be)\//i.test(ytUrl)) {
+          return new Response("not a youtube url", { status: 400 });
+        }
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        // Drop a pending marker so the panel can show "Queued"
+        // before the worker has done anything.
+        await Bun.write(
+          `${YT_GRAB_PENDING_DIR}/${id}.json`,
+          JSON.stringify({ id, url: ytUrl, requested_at: Math.floor(Date.now() / 1000) })
+        );
+        // Spawn the worker. The script handles its own errors and writes
+        // the final status to YT_GRAB_COMPLETED_DIR; we don't need a ref.
+        const proc = Bun.spawn(
+          ["/scripts/youtube-grab.sh", ytUrl, "--job-id", id],
+          {
+            env: {
+              ...process.env,
+              OUT_DIR: "/youtube",
+              JOB_STATUS_DIR: YT_GRAB_COMPLETED_DIR,
+              JELLYFIN_URL: JELLYFIN_URL,
+              JELLYFIN_API_KEY: JELLYFIN_API_KEY,
+              YT_PENDING_FILE: `${YT_GRAB_PENDING_DIR}/${id}.json`,
+            },
+            stdin: "ignore",
+            stdout: "ignore",
+            stderr: "ignore",
+          }
+        );
+        proc.unref();
+        // Drop the pending marker once the worker exits, regardless of
+        // outcome — the panel reads completed/<id>.json next time.
+        proc.exited.then(() => {
+          unlink(`${YT_GRAB_PENDING_DIR}/${id}.json`).catch(() => {});
+        });
+        return Response.json({ ok: true, id });
+      } catch (e) {
+        console.error("youtube-grab error:", e);
+        return new Response(`Bad request: ${(e as Error).message}`, { status: 400 });
+      }
+    }
+
+    // YouTube panel: list pending + recent completed grabs.
+    if (req.method === "GET" && url.pathname === "/api/youtube-grabs") {
+      try {
+        const pendingFiles = (await readdir(YT_GRAB_PENDING_DIR).catch(() => []))
+          .filter((f) => f.endsWith(".json"))
+          .sort()
+          .reverse();
+        const pending = await Promise.all(
+          pendingFiles.map(async (f) => {
+            try {
+              return { ...(JSON.parse(await Bun.file(`${YT_GRAB_PENDING_DIR}/${f}`).text())), pending: true };
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        const completedFiles = (await readdir(YT_GRAB_COMPLETED_DIR).catch(() => []))
+          .filter((f) => f.endsWith(".json"))
+          .sort()
+          .reverse()
+          .slice(0, 20);
+        const completed = await Promise.all(
+          completedFiles.map(async (f) => {
+            try {
+              return { ...(JSON.parse(await Bun.file(`${YT_GRAB_COMPLETED_DIR}/${f}`).text())), pending: false };
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        return Response.json([...pending, ...completed].filter(Boolean));
+      } catch {
+        return Response.json([]);
       }
     }
 

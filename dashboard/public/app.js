@@ -7,6 +7,7 @@ import recsPanel from './panels/recs.js';
 import linksPanel from './panels/links.js';
 import doubleFeaturesPanel from './panels/double-features.js';
 import floodlightsPanel from './panels/floodlights.js';
+import youtubePanel from './panels/youtube.js';
 import { setPanels } from './config.js';
 
 // Fetch runtime config before building the panel list so toggleable panels
@@ -16,7 +17,7 @@ try {
   cfg = await fetch('/api/config').then(r => r.json());
 } catch { /* use defaults */ }
 
-const basePanels = [doubleFeaturesPanel, recsPanel, historyPanel, mainPanel, torrentsPanel, statusPanel, floodlightsPanel, linksPanel];
+const basePanels = [doubleFeaturesPanel, recsPanel, historyPanel, mainPanel, torrentsPanel, statusPanel, floodlightsPanel, youtubePanel, linksPanel];
 const panels = cfg.piholePanel && cfg.piholePanel !== 'off'
   ? [...basePanels, piholePanel]
   : basePanels;
