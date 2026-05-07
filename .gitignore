@@ -35,6 +35,12 @@ movie-bot-data/completed-double-feature-runs/*
 movie-bot-data/sweep-logs/*
 !movie-bot-data/sweep-logs/.gitkeep
 
+# YouTube panel: pending/completed job records (queue state, no source-of-truth content)
+movie-bot-data/youtube-grabs/pending/*
+!movie-bot-data/youtube-grabs/pending/.gitkeep
+movie-bot-data/youtube-grabs/completed/*
+!movie-bot-data/youtube-grabs/completed/.gitkeep
+
 # Python bytecode (e.g. tracker-watch syntax checks)
 __pycache__/
 *.pyc
